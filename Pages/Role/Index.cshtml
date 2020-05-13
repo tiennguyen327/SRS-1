@@ -1,0 +1,40 @@
+﻿@page
+@model SRS.Pages.Role.IndexModel
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<section class="content">
+    <div class="row">
+        <div class="col-sm-6">
+            <div class="box-header with-border">
+                <h3 class="box-title">Roles</h3>
+            </div>
+            <div class="box-body">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <th>Id</th>
+                            <th>Name</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                        @foreach (var role in Model.Roles)
+                        {
+                            <tr>
+                                <td>@role.Id</td>
+                                <td>@role.Name</td>
+                                <td>
+                                    <a asp-page="Delete" asp-route-id="@role.Id" class="btn btn-sm btn-danger">Delete</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="box-footer clearfix">
+                <a asp-page="AddOrEdit" class="btn btn-sm btn-primary">Create</a>
+            </div>
+        </div>
+    </div>
+</section>

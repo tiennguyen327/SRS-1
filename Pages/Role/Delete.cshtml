@@ -1,0 +1,17 @@
+﻿@page "{id}"
+@model SRS.Pages.Role.DeleteModel
+@{
+    ViewData["Title"] = "Delete";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<h1>Delete Confirmation</h1>
+<div class="alert alert-danger">
+    <h5>Are you sure to delete Role - @Model.Role.Name</h5>
+</div>
+<form method="post">
+    <button type="submit" class="btn btn-danger">Yes</button>
+    <a class="btn btn-primary" asp-page="Index">No</a>
+</form>
+
+
