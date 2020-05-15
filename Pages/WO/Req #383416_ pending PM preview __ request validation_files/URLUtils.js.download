@@ -1,0 +1,105 @@
+/**
+ * Decodes the given text using decodeURIComponent.  This method
+ * attempts to heuristically determine whether or not the server used
+ * "+" to encode spaces.
+ *
+ * If it seems like the server was using plus, then plus is also
+ * decoded.  I'll warn you now that this may not work; if the string
+ * is very short then there won't be enough clues in it to decide what
+ * to do.  So for example if the given string is just "+", there's no
+ * way to tell if that is a "+" that the server didn't encode, or if
+ * it's a space that got encoded by the old-style encoder.
+ *
+ * @param schemeHintText To help even the odds, you can provide some
+ * hint text which came from the server.  I can look at that to also
+ * try to guess what the encoding scheme was.
+ **/
+function decodeURIFromServer(text, schemeHintText) {
+    if (schemeHintText == undefined) {
+        schemeHintText = text;
+    }
+
+    var convertPluses = false;
+    
+    if (schemeHintText.indexOf('%20') != -1 ||
+        schemeHintText.indexOf('%020') != -1) {
+        // UNAMBIGUOUS: They are definitely using the new encoding
+        // scheme for spaces
+        convertPluses = false;
+        
+    } else if (schemeHintText.indexOf('%2B') != -1 ||
+               schemeHintText.indexOf('%02B') != -1) {
+        // UNAMBIGUOUS: This server sent us a string that's got
+        // encoded pluses.  Their algorithm wouldn't encode the pluses
+        // unless it was using them as an encoding character.
+        convertPluses = true;
+
+    } else {
+        // AMBIGUOUS: We can't tell for sure.  Let's assume that the
+        // server is using '+' encoding, because that's what Java
+        // 1.3.1 URLEncoder.encode() does.
+        convertPluses = true;
+    }
+    
+    if (convertPluses) {
+        return decodeURIComponent(text.replace(/\+/g, '%20'));
+        
+    } else {
+        return decodeURIComponent(text);
+    }
+}
+
+
+
+/**
+ * This function navigates to the given URL.  If the given URL is too
+ * long for a GET (because it would hit the 2K length limit) then this
+ * function constructs a form dynamically in the document and then
+ * submits it.
+ **/
+function submitURLAsPOST(url, target) {
+    if (url.length < 2048) {
+        // that's easy
+        location.href = url;
+        return;
+    }
+
+    // If this URL is too long, we need to convert it into a form and
+    // then submit it.
+    var form = document.createElement('form');
+    form.method = 'POST';
+
+    if (target) {
+        form.target = target;
+    }
+    
+    var qPos = url.indexOf('?');
+    if (qPos == -1) {
+        form.action = url;
+
+    } else {
+        form.action = url.substring(0, qPos);
+        
+        var sPos = qPos + 1;
+        var aPos = url.indexOf('&', sPos);
+        if (aPos == -1) {aPos = url.length;}
+        while (sPos < url.length) {
+            var ePos = url.indexOf('=', sPos);
+            if (ePos == -1) {ePos = aPos;}
+
+            var inp   = document.createElement('input');
+            inp.type  = 'hidden';
+            inp.name  = decodeURIFromServer(url.substring(sPos, ePos), url);
+            inp.value = decodeURIFromServer(url.substring(ePos + 1, aPos), url);
+            form.appendChild(inp);
+
+            sPos = aPos + 1;
+            aPos = url.indexOf('&', sPos);
+            if (aPos == -1) {aPos = url.length;}
+        }
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+}
+

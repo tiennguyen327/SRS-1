@@ -1,0 +1,24 @@
+var PopupWorkbenchLoaderJsp = "/itg/web/knta/global/PopupWorkbenchLoader.jsp";
+
+function PopupWorkbench(smartURLParams) {
+    this.smartURLParams = smartURLParams;
+}
+
+PopupWorkbench.prototype.loadPopupWorkbench = function(){
+        var src = getHostPath() + PopupWorkbenchLoaderJsp;
+        IFrame.setSrc(src + "?A=A" + this.smartURLParams);
+    }
+
+PopupWorkbench.prototype.openWorkbench = function() {
+      if(this.smartURLParams != null) {
+           window.open('/itg/web/knta/global/Workbench.jsp?FROM_LINK=Y' + this.smartURLParams, 'WORKBENCH', 'resizable=no,width=400,height=400');
+      } else {
+           window.open('/itg/web/knta/global/Workbench.jsp?FROM_LINK=Y', 'WORKBENCH', 'resizable=no,width=400,height=400');
+      }
+}
+
+PopupWorkbench.prototype.callback = function(isOpen) {
+      if(isOpen != 'Y') {
+	   this.openWorkbench();
+      }
+}

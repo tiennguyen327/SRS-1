@@ -1,0 +1,1736 @@
+
+    //Defaults 
+    var undef;
+    var TableComp_SEQCOLSIZE    = 10;
+    var TableComp_CELL_HEIGHT    = 25;
+    
+    // If you change this, change the tableCompLoadThresholdMessage
+    var TableComp_LoadThreshold = 1000;
+
+    var NUM_DATA_MASK = 'NUMERIC';
+    var ACTION_CODE              = 'ACTION_CODE';
+    var ACTION_EDIT              = 'EDIT';
+    var ACTION_ADD               = 'ADD_NEW';
+    var ACTION_COPY              = 'COPY';
+    
+    var ACTION_DELETE          = 'DELETE';
+    var ACTION_UP              = 'UP';
+    var ACTION_DOWN            = 'DOWN';
+    var ACTION_CHECK_ALL      = 'CHECKALL';
+    var ACTION_UNCHECK_ALL      = 'UNCHECKALL';
+    
+    var PARENT_ID              = 'PARENT_ID';
+    var LAST_ENTRY_SEQ         = 'LAST_ENTRY_SEQ';
+    var PROMPT                 = 'PROMPT';
+    var CURRENT_ENTRY_SEQ      = 'CURRENT_ENTRY_SEQ';
+
+    var LOADER_EVENT = "LOADER_EVENT";
+    var LOAD_POPUP = "LOAD_POPUP";
+    var LOAD_CHK_STALE = "LOAD_CHK_STALE";
+    var LOAD_HDR_CLEAR_TABLE = "LOAD_HDR_CLEAR_TABLE";
+    
+    var HAS_UPDATE              = 'TBL_HAS_UPDATE';
+    var EVENT_CODE              = 'TBL_EVENT_CODE';
+    var TABLE_ENTRY_ID          = 'TBL_TABLE_ENTRY_ID';
+    var TBL_PSF_ID              = 'TBL_PARAMETER_SET_FIELD_ID';
+    var TBL_VAL_ID              = 'TBL_VALIDATION_ID';
+    var EVENT_INSERT = 'I';
+    var EVENT_UPDATE = 'U';
+    var EVENT_NOCHANGE = 'N';
+    
+    var TableCompPostFix = "TableCompPopup";
+    var TableCompFormPostFix = "TableCompFormPopup";
+    var TableCompIFrameName = "TCIFrame";
+    var TableCompJsp = "../global/TableEntry.jsp?";
+    var TableCompLoaderJsp = "../global/TableCompLoader.jsp?";
+    var TableCompFormJsp = "TableEntryForm.jsp?";
+    var tcWidth = 950;//800;
+    var tcHeight = 700;//600;
+    var tcFormWidth = 950;//800;
+    var tcFormHeight = 400;//600;
+
+    var ENTRY_DIV_PREFIX = "divE";
+    var TXT_DIV_PREFIX = "txtDiv";
+    var CHKBOX_PREFIX = "chkbox_";
+    var UNRESOLVED = "UNRESOLVED";
+
+    //Global Variables
+    var tcPopup;
+    var tcNewLoc;
+    var tcFormPopup;
+    var tcFormNewLoc;    
+    var isFormPopupWindoidOpen =false;
+    //Common functions
+    _setDirty = function ( isDirty ){
+        this.isDirty = isDirty;
+        if(isDirty){
+            this.isEdited = true;
+        }
+    }
+    
+    //Table Component Constructor
+    function TableComp(prompt, 
+                divelementname,        //div element for html rendering
+                valueElement,   //input type=hidden to store codestring
+                form,           //DOM form object
+                required,
+                blankCodeString, 
+                currentCSValue, 
+                tokenName, 
+                visibleTokenName, 
+                parentId, 
+                parameterSetFieldId,
+                validationId,
+                formName,       //DOM Form name
+                isEnabled){
+        this.prompt = prompt;
+        this.validationId = validationId;
+        this.entries = [];        
+        if(formName == 'WF_EVENT' && currentCSValue == blankCodeString){
+            this.isDirty = true;
+            this.isCleared = true;
+        }else{
+            this.isDirty = false;      
+        }
+        this.isLoaded = false;
+        this.isRequired = required;
+        this.valueElement = valueElement;
+        if(valueElement!=undef){
+            this.name = valueElement.name;
+        }
+        this.divelementname = divelementname;
+        this.isEnabled = isEnabled;
+        this.parentId = parentId;
+        this.psfId = parameterSetFieldId;
+        this.tokenName = tokenName;
+        this.formName = formName;
+        this.form = form;
+        if(tokenName != "" && tokenName != undef){
+            new Token(tokenName, this, false, formName);
+            new TableCompToken(tokenName, this, formName, TableUtils);
+            //TableUtils.addTableToken(tokenName, this, formName);
+        }
+        if(visibleTokenName != "" && visibleTokenName != undef){
+            new Token(visibleTokenName, this, true, formName);
+        }
+        this.colDef = undef;
+        this.mainDiv = undef;
+        this.drawDiv = undef;
+        this.divElement = undef;
+        this.drawnWidths = undef;
+        this.setDocument(document);
+        this.buttonState = undef;
+        this.selectedEntries = [];
+        this.deletedEntries = [];
+        // used for resequencing
+        this.firstSelSeqNo = 0;
+        this.lastSelSeqNo = 0;
+        this.maxFixId = 0;
+        // used for copy/edit
+        this.isStale = false;
+        this.RuleArray = new Array();
+        // check if we have any columns that can display total
+        this.hasTotalColumns = false;
+        this.isNetscape = isNetscape();
+    }
+    //Table Component Prototypes    
+    /**
+     *  addListener is used for rule processing
+     */
+    TableComp.prototype.addListener = function(rule) {
+        this.RuleArray[rule.sequence] = rule;
+    }
+    /**
+     *  returns TokenValue flag is whether visible or hidden.
+     */
+    TableComp.prototype.getTokenValue = function(isVisible){
+        if(this.isLoaded){
+            var entries = this.entries;
+            if(isVisible){
+                if(entries.length == 0){
+                    return "";
+                }else if(entries.length == 2){
+                    return "1 " +  ENTRY_TXT;
+                }else{
+                    return entries.length - 1 + " " + ENTRIES_TXT;
+                }
+            }else{
+                if(entries.length == 0){
+                    return "";
+                }else{
+                    return new String(entries.length - 1);
+                }
+            }
+        }else{
+            return decode(this.valueElement.value, isVisible);
+        }
+    }
+    /**
+     *  Accessor method to set a Table Component to stale.
+     */
+    TableComp.prototype.setStale = function(isStale){
+        this.isStale = isStale;
+    }
+    /**
+     *  Accessor method to set a Table Component to dirty.
+     */
+    TableComp.prototype.setDirty = _setDirty
+    /**
+     *  Accessor method to set the Table Components column definitions.
+     */
+    TableComp.prototype.setColDef = function( names, tokens, widths, dataMaskCodes, requiredFlags, displayTotalFlags, paramCols, componentTypeCodes ){
+        this.colDef = new ColDef(names, tokens, widths, dataMaskCodes, requiredFlags, displayTotalFlags, paramCols, componentTypeCodes);
+        // check and see if we have any displayTotalFlag that is yes
+        for (var i = 0; i < displayTotalFlags.length; i++) {
+            if (displayTotalFlags[i] == 'Y') {
+                this.hasTotalColumns = true;
+                break;
+            }
+        }
+        
+    }
+    /**
+     *  Checks whether or not the col definition had change or not, and warns the user if it did change.
+     */
+    TableComp.prototype.checkColDef = function(paramCols){
+        var localParamCols = this.colDef.paramColumns;
+        var paramColsHadChanged = false;
+        if(paramCols.length!=localParamCols.length){
+            paramColsHadChanged = true;
+        }
+        if(paramColsHadChanged==false){
+            for(var i=0;i<localParamCols.length;i++){
+                if(localParamCols[i]!=paramCols[i]){
+                    paramColsHadChanged = true;
+                    break;
+                }
+            }
+        }
+        if(paramColsHadChanged==true){
+            alert(COL_DEFINITION_CHANGE_MESSAGE.replace(/\{0\}/ig,this.prompt));
+        }
+    }                                           
+    /**
+     *  Method to add a new entry. Used whenever there is a batch load.
+     */
+    TableComp.prototype.addE = function(id, seq, data, visibleData, dirtyFlag){
+        this.addEntry(id, seq, seq, data, visibleData, dirtyFlag);
+    }
+    /**
+     *  Method to update an entry. Used in the TableEntryForm.jsp
+     */
+    TableComp.prototype.updateEntry = function(id, seq, data, visibleData, paramCols){
+        this.checkColDef(paramCols);
+        this.setDirty(true);
+        var entry = this.entries[seq];
+        entry.data = copy_Array(data);
+        entry.visibleData = copy_Array(visibleData);
+        entry.setDirty(true);
+        var sB = this.drawE(entry, false,true);
+        entry.getDiv().innerHTML = sB;
+        entry.invalidateChildren();
+        entry.check();
+        this.updateButtonState();
+        if (this.hasTotalColumns) {
+            this.drawT();
+        }
+    }
+    /** 
+     *  Method used to add a new entry one at a time, this method also paints the object on the screen.
+     *  Used in the TableEntryForm.jsp
+     */
+    TableComp.prototype.addNew = function(id, seq, data, visibleData, paramCols){
+        this.checkColDef(paramCols);
+        //this.test(); //test's the logic on computing the right seq number.
+        this.setDirty(true);
+        var appendFlag = false;
+        if(this.entries.length == 0){
+            seq = 1;
+            this.drawDiv.removeChild(this.doc.getElementById(ENTRY_DIV_PREFIX + "0"));
+            appendFlag = true;
+        }else if(seq+1 >= this.entries.length  || (typeof seq!= 'number')){
+            seq = this.entries.length;
+            appendFlag = true;
+        }else if(seq <= 0){
+            seq = 1;
+        }else{
+            seq += 1;
+        }
+        this.maxFixId += 1;
+        var entry = new Entry(id, seq, this.maxFixId, copy_Array(data), copy_Array(visibleData));
+        entry.parentTC = this;
+        var sB = this.drawE(entry, false, true);
+        var divObj = this.doc.createElement('div');
+        divObj.id = ENTRY_DIV_PREFIX + entry.fixId;
+        divObj.innerHTML = sB;
+        entry.setDiv(divObj);
+        if(appendFlag){
+            this.drawDiv.appendChild(divObj);
+            this.entries[seq] = entry;
+        }else{
+            var entryToMove = this.entries[seq];
+            //insert div
+            this.drawDiv.insertBefore(divObj, entryToMove.getDiv());
+            //insert array
+            var slice1 = this.entries.slice(0,seq);
+            var slice2 = this.entries.slice(seq,this.entries.length);
+            slice1[slice1.length] = entry;
+            slice1 = slice1.concat(slice2);
+            for(var i=seq+1;i<slice1.length;i++){
+                if(slice1[i]!=undef){
+                    slice1[i].setSeq(i);
+                }
+            }
+            this.entries = slice1;
+        }
+        divObj.className = entry.getClassName();
+        this.updateButtonState();
+        if (this.hasTotalColumns) {
+            this.drawT();
+        }
+    }
+    /**
+     *  Method to add an entry.
+     */
+    TableComp.prototype.addEntry = function(id, seq, fixId, data, visibleData, dirtyFlag){
+        this.isLoaded = true;
+        this.entries[seq] = new Entry(id, seq, fixId, data, visibleData);
+        if(dirtyFlag!=undef){
+            this.entries[seq].setDirty(dirtyFlag);
+        }
+        this.entries[seq].parentTC = this;
+        this.maxFixId += 1;
+    }
+    /**
+     *  Method that calculates the total of a column.
+     *  considers fields that are non numeric.
+     */
+    TableComp.prototype.getTotal = function(index){
+        var total = 0;
+        for(var i=1;i<this.entries.length;i++){
+            if(this.entries[i].data[index]!=undef ){
+                var value = decode(this.entries[i].data[index],false);
+                if(value!=""){
+                    total += parseFloat(value);
+                }
+            }
+        }
+        if(isNaN(total)){
+            total = INVALID_NUM; 
+        }
+       return total;
+    }
+    /**
+     *  returns a list of values delimted by space.
+     */
+    TableComp.prototype.getDelimitedList = function(index, returnMeaning){
+        var sB = "";
+        var firstFlag = false;
+        var dataCS, data;
+        for(var i=1;i<this.entries.length;i++){
+            dataCS = this.entries[i].data[index];
+            if(dataCS!=undef){
+                data = decode(dataCS, returnMeaning);
+                if(data!=undef && data!=""){
+                    if(firstFlag){
+                        sB += COMMA_SPACE;
+                    }
+                    sB += data;
+                    firstFlag = true;
+                }
+            }
+        }
+        return sB;
+    }
+    /**
+     *  extracts the number in a string like TE="1"
+     */
+    function extract_Number(str){
+        var seq = "";
+        var lastStartDelimIndex = -1;
+        for(var i=0;i<str.length;i++){
+            if(str.charAt(i) == '"' && lastStartDelimIndex == -1){
+                lastStartDelimIndex = i;
+            }else if(str.charAt(i) == '"'){
+                if(lastStartDelimIndex != -1){
+                    seq = str.substring(lastStartDelimIndex+1,i);
+                    break;
+                }
+            }
+        }
+        return seq;
+    }
+    /**
+     *  returns the value of a Table Token.
+     */
+    TableComp.prototype.getTableTokenValue = function(token){
+        if(!this.isLoaded){
+            return "[" + token + "]";
+        }
+        var tokens = token.split(".");
+        var hidden = tokens[4] == 'P';
+        var visible = tokens[4] == 'VP';
+        var tcToken = tokens[3].indexOf('TC') != -1;
+        var teToken = tokens[3].indexOf('TE=') != -1 && tokens[6]==undef;
+        var columnToken = tokens[5];
+        var valid = false;
+        var index = -1;
+        if(tokens[0] != 'REQD' || 
+           tokens[1] != 'T' || 
+           (!hidden && !visible) ||
+           (!tcToken && !teToken)){
+            return "[" + token + "]";
+        }
+        validTokens = this.colDef.tokens;
+        for(var i=0;i<validTokens.length;i++){
+            if(validTokens[i] == columnToken){
+                valid=true;
+                index = i;
+                break;
+            }
+        }
+        if(!valid){
+            return "[" + token + "]";
+        }
+        if(tcToken){
+            if(tokens[6] != undef && tokens[6] == "TOTAL"){
+                return this.getTotal(index);
+            }else{
+                return this.getDelimitedList(index, visible)
+            }
+        }else{
+            var seq = extract_Number(tokens[3]);
+            if(seq==""){
+                return "[" + token + "]";
+            }else{
+                if(this.entries[seq] != undef){
+                    return decode(this.entries[seq].data[index], visible);
+                }else{
+                    return "[" + token + "]";
+                }
+            }
+        }
+    }
+    /**
+     *  Utility method to update the UI and the Hidden html element dependending on
+     *  the data stored in the page.
+     */
+    TableComp.prototype.updateUIAndHiddenField = function(){
+        if(this.divElement==undef){
+            var obj = this.doc.getElementById(this.divelementname);
+            if(obj!=undef){
+                this.divElement = obj;
+            }
+        }
+        var value = this.getTokenValue(true);
+        if (value == "") {
+            value = NO_ENTRIES_WITH_PARENS;
+        }
+        this.valueElement.value = encode(this.getTokenValue(false), this.getTokenValue(true));
+        this.divElement.innerHTML = value.replace(/ /ig,"&nbsp;");
+    }
+    /**
+     *  applyChanges used when table entry dialog closes and user chooses to save.
+     */
+    TableComp.prototype.applyChanges = function( oldTC ){
+        var newTC = this;
+        property = "";
+        for(var prop in oldTC){
+            if(typeof oldTC[prop] != 'object' && typeof newTC[prop] != 'object'){
+                newTC[prop] = oldTC[prop]
+                //property += " \n" + prop + " = " + typeof oldTC[prop];
+            }
+        }
+        //alert(property);
+        newTC.colDef = copy_ColDef(oldTC.colDef);
+        newTC.entries = [];
+        for(var i=0;i<oldTC.entries.length;i++){
+            if(oldTC.entries[i] != undef){
+                newTC.entries[i] = copy_Entry(oldTC.entries[i]);
+                newTC.entries[i].parentTC = newTC;
+            }
+        }
+        this.updateUIAndHiddenField();
+        this.validate(true);
+
+        if(this.RuleArray.length > 0){
+            RuleUtil.evaluateRules(this.RuleArray);
+        }else{
+            RuleUtil.isPendingFlag = false;
+        }
+    }
+    /**
+     *  Standard validate method used by the form validate function.
+     */
+    TableComp.prototype.validate = function(noRequireCheck){
+        if(noRequireCheck == null && checkRequired != null) {
+          noRequireCheck = !checkRequired;
+        }
+        if(this.isRequired && this.getTokenValue(false)=="" && !noRequireCheck){
+            requiredAlert(this.prompt);
+            return false;
+        }
+        var parentName = this.name + "_";
+        this.updateFormElement(parentName + TBL_PSF_ID, this.psfId);
+        this.updateFormElement(parentName + TBL_VAL_ID, this.validationId);
+        if(this.isDirty){
+            this.getAllInputTypeHidden();
+            this.updateFormElement(parentName+HAS_UPDATE, 'Y');
+        }else{
+            this.updateFormElement(parentName+HAS_UPDATE, 'N');
+        }
+        return true;
+    }
+    /**
+     *  Loads different information from the server via the TableCompLoader.jsp.
+     */ 
+    TableComp.prototype.loadTableComp = function(loaderEvent){
+        this.doc[TableCompIFrameName + this.tokenName] = this;
+        var ts = "";
+        if(this.form['REQ_TIMESTAMP']!=undef){
+            ts = "&REQ_TIMESTAMP=" + this.form['REQ_TIMESTAMP'].value;
+        }
+        var src = getHostPath() + TableCompLoaderJsp +
+                  "&PARENT_ID=" + this.parentId +
+                  "&TBL_PARAMETER_SET_FIELD_ID=" + this.psfId +
+                  "&TBL_VALIDATION_ID=" + this.validationId +
+                  "&PROMPT=" + encodeURIComponent (this.prompt) +
+                  "&TC_NAME=" + TableCompIFrameName + encodeURIComponent(this.tokenName) +
+                  ts +
+                  "&LOADER_EVENT=" + loaderEvent +
+                  "&" + new Date().toString();
+        IFrame.setSrc(src);
+    }
+    /**
+     *  Function to delete entries in the table also remains the table after deletion.
+     */
+    TableComp.prototype.deleteEntries = function(){
+
+        this.setDirty(true);
+        //remove the Entry from the entries array and from the div object.
+        var newEntries = [];
+        //We don't use the first item we always start from one.
+        newEntries[0] = undef;
+        var entries = this.entries;
+        for(var i=1;i<entries.length;i++){
+            var e = entries[i];
+            if(e!=undef){
+                if(!e.isSelected()){
+                    newEntries[newEntries.length] = e;
+                }else{
+                    var o = this.doc.getElementById(ENTRY_DIV_PREFIX + e.fixId); 
+                    this.drawDiv.removeChild(o);
+                }
+            }else{
+                this.doc.parentWindow.alert(internalErrorUndefElement + i);
+            }
+        }
+        this.entries = newEntries;
+        if(newEntries.length <= 1){
+            sB = this.drawNoEntry();
+            this.entries = [];
+            this.drawDiv.innerHTML = sB;
+        }else{
+            //resequence existing ones.
+            for(var i=1;i<newEntries.length;i++){
+                var e = newEntries[i];
+                if(e!=undef){
+                    if(e.seq != i){
+                        e.setSeq(i);
+                    }
+                }
+            }
+        }
+
+        this.updateButtonState();
+        if (this.hasTotalColumns) {
+            this.drawT();
+        }
+    }
+    /**
+     *  This method is used to set the document object of the table component
+     *  since this component can span different browser windows we need to 
+     *  make sure that the approprate document is called.
+     */
+    TableComp.prototype.setDocument = function (newdoc){
+        this.doc = newdoc;
+        if(this.doc.parentWindow == undef){
+            this.doc.parentWindow =  window;
+        }
+        var obj = this.doc.getElementById("mainDiv");
+        this.mainDiv = obj;
+        this.drawDiv = this.doc.createElement('div');
+        this.drawDiv.id = 'drawdiv';
+    }
+    /**
+     *  Callback method by the TableCompLoader.jsp, this method 
+     *  finishes what the Internal Frame cannot finish.
+     */
+    TableComp.prototype.callback = function(loaderEvent, isStale){
+        if(loaderEvent == LOAD_POPUP || loaderEvent == LOAD_HDR_CLEAR_TABLE){
+            this.isLoaded = true;
+            this.popupTCWin();
+        }else if(loaderEvent == LOAD_CHK_STALE){
+            var isStale = this.isStale;
+            if(isStale){
+                this.isEnabled = false;
+                if(this.isLoaded){
+                    var confirm = this.doc.parentWindow.confirm(oldDataStaleMessage);
+                    if(confirm){
+                        this.popupTCWin();
+                    }
+                }else{
+                    var confirm = this.doc.parentWindow.confirm(staleRequestMessage);
+                    if(confirm){
+                        this.loadTableComp(LOAD_POPUP);
+                    }
+                }
+            }else{
+                if(this.isLoaded){
+                    this.popupTCWin();
+                }else{
+                    if(this.isCleared){
+                        this.loadTableComp(LOAD_HDR_CLEAR_TABLE);
+                    }else{
+                        this.loadTableComp(LOAD_POPUP);
+                    }
+                }
+            }
+        }
+    }
+    /**
+     *  onclick method used and attached to the Table Component Icon
+     */
+    TableComp.prototype.onclick = function(){
+        if(this.form['REQ_TIMESTAMP']==undef){
+            if(this.isLoaded){
+                this.popupTCWin();
+            }else{
+                //we still need to load the headers.
+                this.loadTableComp(LOAD_POPUP);
+            }
+        }else{
+            //heck if data is already stale.
+            this.loadTableComp(LOAD_CHK_STALE);
+        }
+    }
+    /**
+     *  Method to launch the Table Component Spread sheet form.
+     */        
+    TableComp.prototype.popupTCWin = function(){
+        if(this.entries.length>TableComp_LoadThreshold){
+            this.doc.parentWindow.alert(tableCompLoadThresholdMessage);
+        }
+
+        // This pops the dialog
+        // 1. It's possible that this would be called by the onclick function because data has already been loaded.
+        // 2. It's also possible that this would be called by the IFRAME when it returns from the server loading the data.
+        var objectName = this.name + TableCompPostFix;
+        this.doc[objectName] = this;
+        this.doc["WINDOID_"+objectName+"PGTOKENS"] = pageTokens;
+        tcNewLoc = getHostPath() +
+                  TableCompJsp +
+                  "PARENT_ID=" + this.parentId +
+                  "&TBL_PARAMETER_SET_FIELD_ID=" + this.psfId +
+                  "&TBL_VALIDATION_ID=" + this.validationId +
+                  "&PROMPT=" + encodeURIComponent(this.prompt) +
+                  "&ROW_COUNT=" + this.entries.length +
+                  "&CAN_UPDATE=" + (this.isEnabled?"Y":"N") + 
+                  "&WINDOW_ID=" + objectName;
+        openWindoid(tcNewLoc, tcWidth, tcHeight, null, objectName);          
+    }
+    /**
+     *  Method to turn off all buttons so that the user can't do anything
+     *  if the child window is open.
+     */
+    TableComp.prototype.turnOffAll = function(){
+        isFormPopupWindoidOpen = true;
+        this.buttonState.turnOffAll();
+        this.updateButtonState();
+    }
+    /**
+     *  Method to turn on all buttons so that the user can resume table functions
+     *  if the child window is closed.
+     */
+    TableComp.prototype.turnOnPossible = function(){
+        isFormPopupWindoidOpen = false;
+        this.buttonState.turnOnPossible();
+        this.updateButtonState();
+    }
+    //Table Component Dialog Action Button Prototypes
+    /**
+     *  Method is called when edit button is clicked, this launches the table entry form edit windoid
+     */
+    TableComp.prototype.editClick = function(){
+        if(this.buttonState.canDo(ACTION_EDIT)){
+            this.turnOffAll();
+            this.popupForm(ACTION_EDIT);
+        }
+    }
+    /**
+     *  Method is called when copy button is clicked, this launches the table entry form copy windoid
+     */
+    TableComp.prototype.copyClick = function(){
+        if(this.buttonState.canDo(ACTION_COPY)){
+            this.turnOffAll();
+            this.popupForm(ACTION_COPY);
+        }
+    }
+    /**
+     *  Method is called when add button is clicked, this launches the table entry form add windoid
+     */
+    TableComp.prototype.addClick = function(){
+        if(this.buttonState.canDo(ACTION_ADD)){
+            this.turnOffAll();
+            return this.popupForm(ACTION_ADD);
+        }
+    }
+    /**
+     *  Method is called when delete button is clicked
+     */
+    TableComp.prototype.deleteClick = function(){
+        if(this.buttonState.canDo(ACTION_DELETE)){
+            var confirm = this.doc.parentWindow.confirm(deleteConfirm);
+            if(confirm){
+                this.deleteEntries();
+            }
+        }
+    }
+    /**
+     *  Method is called when done button is clicked
+     */
+    TableComp.prototype.doneClick = function(){              
+        var parentTC = this.doc.parentWindow.opener.document[this.doc.parentWindow.WINDOW_ID];
+        if(this.isEdited && !(parentTC.entries.length==0 && this.entries.length==0)){ 
+            parentTC.applyChanges(this);
+        }
+        this.closeWindow();
+    }
+    /**
+     *  Method is called when a close event happens.
+     */
+    TableComp.prototype.closeWindow = function(){
+        if(tcFormPopup!=undef && !tcFormPopup.closed){
+            tcFormPopup.isParentClosing = true;
+            tcFormPopup.close();
+        }        
+        this.doc.parentWindow.close();
+    }
+    /**
+     *  Method is called when cancel button is clicked
+     */
+    TableComp.prototype.cancelClick = function(){
+        var conf = true;
+        if(this.isEnabled && this.isEdited){ 
+            conf = this.doc.parentWindow.confirm(cancelChangesMesage);
+        }
+        if(conf){
+            this.closeWindow();
+        }
+    }
+    /**
+     *  Method is called when up arrow is clicked calculates all
+     *  rows that needs to move around.
+     */
+    TableComp.prototype.upClick = function(){
+        if(this.buttonState.canDo(ACTION_UP)){
+            this.setDirty(true);
+            var entryToMoveDn = this.entries[this.firstSelSeqNo-1];
+            var entryToPushUp;
+            if(this.lastSelSeqNo+1 != this.entries.length){
+                entryToPushUp = this.entries[this.lastSelSeqNo+1];
+                this.drawDiv.insertBefore(entryToMoveDn.getDiv(), entryToPushUp.getDiv());
+            }else{
+                this.drawDiv.appendChild(entryToMoveDn.getDiv());
+            }
+
+            var slice1 = this.entries.slice(0,this.firstSelSeqNo-1);
+            var slice2 = this.entries.slice(this.firstSelSeqNo-1,this.firstSelSeqNo);
+            var slice3 = this.entries.slice(this.firstSelSeqNo,this.lastSelSeqNo+1);
+            var slice4 = this.entries.slice(this.lastSelSeqNo+1,this.entries.length);
+
+            slice1 = slice1.concat(slice3);
+            slice1 = slice1.concat(slice2);
+            slice1 = slice1.concat(slice4);
+            for(var i=this.firstSelSeqNo-1;i<this.lastSelSeqNo+1;i++){
+                if(slice1[i]!=undef){
+                    slice1[i].setSeq(i);
+                    this.entries[i] = slice1[i];
+                }
+            }
+            this.updateButtonState();
+
+        }
+    }
+    /**
+     *  Method is called when down arrow is clicked calculates all
+     *  rows that needs to move around.
+     */
+    TableComp.prototype.downClick = function(){
+        if(this.buttonState.canDo(ACTION_DOWN)){
+            this.setDirty(true);
+            var entryToMoveUp = this.entries[this.lastSelSeqNo+1];
+            var entryToPushDn = this.entries[this.firstSelSeqNo];
+            this.drawDiv.insertBefore(entryToMoveUp.getDiv(), entryToPushDn.getDiv());
+
+            var slice1 = this.entries.slice(0,this.firstSelSeqNo);
+            var slice2 = this.entries.slice(this.firstSelSeqNo,this.lastSelSeqNo+1);
+            var slice3 = this.entries.slice(this.lastSelSeqNo+1,this.lastSelSeqNo+2);
+            var slice4 = this.entries.slice(this.lastSelSeqNo+2,this.entries.length);
+
+            slice1 = slice1.concat(slice3);
+            slice1 = slice1.concat(slice2);
+            slice1 = slice1.concat(slice4);
+            for(var i=this.firstSelSeqNo;i<this.lastSelSeqNo+2;i++){
+                if(slice1[i]!=undef){
+                    slice1[i].setSeq(i);
+                    this.entries[i] = slice1[i];
+                }
+            }
+            this.updateButtonState();
+        }
+    }
+    /**
+     *  Method is called when check all button is clicked calculates all
+     *  buttons that needs to be enabled or disabled.
+     */
+    TableComp.prototype.checkAll = function(){
+        if(this.buttonState.canDo(ACTION_CHECK_ALL)){
+            for(var i=0;i<this.entries.length-1;i++){
+                this.entries[i+1].check();
+            }
+            this.buttonState.isButtonOn[ACTION_EDIT] = false;
+            this.buttonState.isButtonOn[ACTION_COPY] = false;
+            this.buttonState.isButtonOn[ACTION_DELETE] = true;
+            this.buttonState.isButtonOn[ACTION_UP] = false;
+            this.buttonState.isButtonOn[ACTION_DOWN] = false;
+            this.buttonState.isButtonOn[ACTION_CHECK_ALL] = false;
+            this.buttonState.isButtonOn[ACTION_UNCHECK_ALL] = true;
+            this.buttonState.repaint();
+        }
+    }
+    /**
+     *  Method is called when uncheck all button is clicked calculates all
+     *  buttons that needs to be enabled or disabled.
+     */
+    TableComp.prototype.uncheckAll = function(){
+        if(this.buttonState.canDo(ACTION_UNCHECK_ALL)){
+            for(var i=0;i<this.entries.length-1;i++){
+                this.entries[i+1].uncheck();
+            }
+            this.buttonState.isButtonOn[ACTION_EDIT] = false;
+            this.buttonState.isButtonOn[ACTION_COPY] = false;
+            this.buttonState.isButtonOn[ACTION_DELETE] = false;
+            this.buttonState.isButtonOn[ACTION_UP] = false;
+            this.buttonState.isButtonOn[ACTION_DOWN] = false;
+            this.buttonState.isButtonOn[ACTION_CHECK_ALL] = true;
+            this.buttonState.isButtonOn[ACTION_UNCHECK_ALL] = false;
+            this.buttonState.repaint();
+        }
+    }
+    //Drawing Requirement prototype functions
+    /**
+     *  Method is called to set the initial button states.
+     */
+    TableComp.prototype.setButtonState = function(doc){
+        this.buttonState = new ButtonState(doc);
+        if (this.entries.length == 0){
+            this.buttonState.isButtonOn[ACTION_UNCHECK_ALL] = false;
+            this.buttonState.isButtonOn[ACTION_CHECK_ALL] = false;
+        }
+        this.buttonState.repaint();
+    }
+    /**
+     *  Method used to generate the variables that refer 
+     *  to the corresponding check box on each line in the table component spread sheet.
+     */
+    TableComp.prototype.associateChkBoxes = function(){
+        var entries = this.entries;
+        for(var i=1;i<entries.length;i++){
+            var e = entries[i];
+            e.getCBElement();
+        }        
+    }
+    /**
+     *  Method is used to calculate what buttons needs to be enabled or disabled
+     *  specifically when a user clicks on a check box
+     */
+    TableComp.prototype.updateButtonState = function(){
+        var upOn = true;
+        var downOn = true;
+        var prevSel = false;
+        var firstSel = false;
+        var secondSel = false;
+        var rowSelectedCount = 0;
+        var entries = this.entries;
+        this.lastSelSeqNo = 0;
+        for(var i=1;i<entries.length;i++){
+            var e = entries[i];
+            if(e != undef && e.isSelected()){
+                rowSelectedCount += 1;
+                if(!firstSel){
+                    this.firstSelSeqNo = e.seq;//used for computing the array to slice to dice
+                }else{//as long firstSel is true secondSel would be true.
+                    secondSel = true;
+                }
+                if(secondSel && !prevSel){
+                    upOn = false;
+                    downOn = false;
+                }else{
+                    firstSel = true;
+                    prevSel = true;
+                }
+                this.lastSelSeqNo = e.seq;
+            }else{
+                secondSel = false;
+                prevSel = false;
+            }
+            if(!upOn && !downOn){
+                break;
+            }
+        }
+        if(rowSelectedCount == 0){
+            upOn = false;
+            downOn = false;
+        }else{
+            if(entries[1].isSelected()){
+                upOn = false;
+            }
+            if(entries[entries.length-1].isSelected()){
+                downOn = false;
+            }
+        }
+        this.buttonState.isButtonOn[ACTION_EDIT] = (rowSelectedCount == 1);
+        this.buttonState.isButtonOn[ACTION_COPY] = (rowSelectedCount == 1);
+        this.buttonState.isButtonOn[ACTION_DELETE] = (rowSelectedCount > 0);
+        this.buttonState.isButtonOn[ACTION_UP] = upOn;
+        this.buttonState.isButtonOn[ACTION_DOWN] = downOn;
+        this.buttonState.isButtonOn[ACTION_UNCHECK_ALL] = (rowSelectedCount != 0);
+        this.buttonState.isButtonOn[ACTION_CHECK_ALL] = (entries.length != 0) && (entries.length-1!=rowSelectedCount);
+        this.buttonState.repaint();
+    }
+    /**
+     *  Method is used to generate the table component in the spread sheet view.
+     *  it generates the headers, the entires and the totals.
+     */
+    TableComp.prototype.drawTC = function (){
+
+        //if(this.mainDiv!=undef && this.drawDiv!=undef)
+        //    this.mainDiv.removeChild(this.drawDiv);
+        this.drawDiv = this.doc.createElement('div');
+        this.drawDiv.id = 'drawDiv';
+        this.drawDiv.className = 'tablecompborder';
+        this.mainDiv.appendChild(this.drawDiv);
+        //loop through all e[] using drawE
+        var entries = this.entries;
+
+        var sB = "";
+        this.recalculateSeqCol();
+        if(entries.length == 0){
+            sB = this.drawNoEntry();
+        }else{
+            for(var i=1;i<entries.length;i++){
+                //this.drawE(entries[i+1]);//almost 3 mins. for 500 rows.
+		if (i == entries.length-1)
+		sB += this.drawE(entries[i], true, false);
+		else
+                sB += this.drawE(entries[i], true, true);
+            }
+        }
+        this.drawH();
+	
+        this.drawDiv.innerHTML = sB;
+        if (this.hasTotalColumns) {
+            this.drawT();
+        }
+        this.associateChkBoxes();
+    }
+    /**
+     *  Draw No Entries row in the Table Spreadsheet view.
+     */
+    TableComp.prototype.drawNoEntry = function(){
+        var sB = "<table cellpadding=0 border=0 cellspacing=0>";
+        sB += "<tr>";
+        sB += "<td><img height='" + TableComp_CELL_HEIGHT + "' src='s.gif'></td>";
+        sB += "<td class=field-prompt ><center>" + NO_ENTRIES + "</center></td>";
+        sB += "</tr>";
+        sB += "</table>";
+        sB = "<div class='normal-text' id='" + ENTRY_DIV_PREFIX + "0'>" + sB + "</div>";
+        return sB;
+    }
+    /**
+     *  Draw Header row in the Table Spreadsheet view.
+     */
+    TableComp.prototype.drawH = function(){
+        var sB = "<table cellpadding=0 border=0 cellspacing=0 >";
+        var seqSize = this.getSeqSizeInPixels();
+        seqClass = "table-comp-seq-header";
+        colClass = "table-comp-col-header";
+        if(this.isNetscape){
+            seqClass += "-netscape";
+            colClass += "-netscape";
+        }
+        sB += "<tr height=100%><td><div class="+ seqClass + " style='width:" + seqSize + "px'>" + SEQ + "</div></td>";
+
+        for(var i=0;i<this.colDef.names.length;i++){
+            sB += "<td class=table-comp><div class='" + colClass + this.colDef.widths[i] +"'><span >"
+            if(this.colDef.requiredFlags[i] == 'Y'){
+                sB += "<span class='field-prompt-asterisk'>*</span>";
+            }
+            sB += this.colDef.names[i];
+            sB += "</span></div></td>";
+        }
+        sB += "</tr>";
+        sB += "</table>";
+        var o = this.doc.getElementById('divheader');
+        o.className = 'tablecompborder tablePromptBK';
+        o.style.cssText += ';border-bottom-width:0px;' ;
+        o.innerHTML = sB;
+    }
+    /**
+     *  Draw total row in the Table Spreadsheet view.
+     */
+    TableComp.prototype.drawT = function(){
+        seqClass = "table-comp-cell1";
+        coltClass = "table-comp-cell";
+        if(this.isNetscape){
+            seqClass += "-netscape";
+            colClass += "-netscape";
+        }
+        var sB = "<table cellpadding=0 border=0 cellspacing=0>";
+        var seqSize = this.getSeqSizeInPixels();
+        sB += "<tr height=100%><td valign='center' nowrap><div class=" + seqClass + " style='width:" + seqSize + "px;border-top-width:0'><span style='font-weight:bold;'>" + TOTAL + "</span></div></td>";
+        for(var i=0;i<this.colDef.displayTotalFlags.length;i++){
+            
+            sB += "<td class=table-comp><div class=" + coltClass + this.colDef.widths[i] +">"
+            if(this.colDef.displayTotalFlags[i].indexOf("Y") != -1){
+                sB += this.getTotal(i);
+            }
+            sB += "</div></td>";
+        }
+        sB += "<td></td></tr>";
+        sB += "</table>";
+        
+        var o = this.doc.getElementById('divtotal');
+        o.className = 'rowtotal';
+        o.innerHTML = sB;
+        
+    }
+    /**
+     *  Draw an Entry in the Table Spreadsheet view.
+     */
+    TableComp.prototype.drawE = function ( currentE, buildDiv, underline ){
+        seqClass = "table-comp-seq-cell";
+        colClass = "table-comp-cell";
+        if(this.isNetscape){
+            seqClass += "-netscape";
+            colClass += "-netscape";
+        }
+
+        var seq = currentE.seq;
+        var endData = "";
+        var data = currentE.data;
+        var visibleData = currentE.visibleData;
+        var columnDef = this.colDef;//style='border-collapse:collapse' 
+        var sB = "<table style='border-collapse:collapse' height=100% cellpadding=0 border=0 cellspacing=0>";
+        sB += "<tr><td valign=top ><div class=" + seqClass + " style='width:" + this.getSeqSizeInPixels() + "px;'>";
+        sB += "<table style='border-collapse:collapse' height=100% cellpadding=0 border=0 cellspacing=0>";
+        sB += "<tr><td valign=top>";
+        if(this.isEnabled){
+            sB += "<input type=checkbox id='" + CHKBOX_PREFIX + currentE.fixId + "'>";
+        }else{
+            sB += "<img src='s.gif' height=1 width=1>";
+        }
+        sB += "</td><td valign=top><div style='padding-left:10' class=field-value-nopad valign=center id='" + TXT_DIV_PREFIX + currentE.fixId + "'>" + seq + "</div></td>";
+        sB += "</tr></table></div>";
+        
+        for(var i=0;i<data.length;i++){
+            endData = decode(data[i], true);
+            var mstyle = '';
+            if(i==data.length-1){
+                mstyle = ';width:100%';
+            }
+            sB += "<td class=table-comp><div style='" + mstyle + "' class=" + colClass + this.colDef.widths[i] + ">";
+            if (columnDef.componentTypeCodes[i]=='19') {//link
+            	endData = decode(data[i], false);
+            	visData = decode(data[i], true);
+            	if (visData=="") {//if there is no description use the URL as description
+            		visData = endData;
+            	}
+            	sB += this.formatWithEscape(endData, visData, columnDef.componentTypeCodes[i], true);
+            } else if(endData.length > 0 || columnDef.componentTypeCodes[i]=='12'){ //12 = passwords
+            	sB += this.formatWithEscape(endData, visibleData[i], columnDef.componentTypeCodes[i], true);
+            }
+            sB += "</div></td>";
+        }
+        sB += "</tr></table>";
+        if(buildDiv){
+	    if (underline)
+            sB = "<div id='" + ENTRY_DIV_PREFIX + currentE.fixId + "' class='list-bdr-B'>" + sB + "</div>";
+	    else
+	    sB = "<div id='" + ENTRY_DIV_PREFIX + currentE.fixId + "' >" + sB + "</div>";
+        }
+        if(currentE.seq != seq){
+            currentE.setSeq(seq);
+        }
+
+        return sB;
+    }
+    /**
+     *  function to format specific columns
+     */
+    TableComp.prototype.format = function(endData, visibleData, componentTypeCode){
+        return this.formatWithEscape (endData, visibleData, componentTypeCode, false);
+    }
+    /**
+     *  wrapper to include formatting with escape - added later.
+     */
+    TableComp.prototype.formatWithEscape = function(endData, visibleData, componentTypeCode,doEscape){
+        if(componentTypeCode == '7') {          //date
+            return visibleData;
+
+        }else if(componentTypeCode == '12'){    //password
+            if(endData==""){
+                return passwordBlank;           //from CompValidation.js
+            }else{
+                return passwordMask;            //from CompValidation.js
+            }  
+ 
+        }else if(componentTypeCode == '8'){     //url
+            if(endData.indexOf("://") == -1) {
+                // Request #154105 - do not force protocol to http/https, 
+                //                   but default to http if not specified
+                endData = "http://" + endData;
+            }
+            return "<a href='" + endData + "' target='WINDOID_OPENURL' onclick='openWindoidWithMenu(\"OPENURL\")'>" + 
+                   gotoUrl + "</a>";
+
+        } else if(componentTypeCode == '19'){     //link
+        	if(endData.indexOf("://") == -1) {
+                // Request #154105 - do not force protocol to http/https,
+                //                   but default to http if not specified
+                endData = "http://" + endData;
+            }
+            return "<a href='" + endData + "' target='WINDOID_OPENURL' onclick='openWindoidWithMenu(\"OPENURL\")'>" + 
+                   visibleData + "</a>";
+
+        } else if (doEscape) {
+            // This needs to be escaped for HTML before being displayed
+            return escapeForHTML (endData);
+            
+        } else {
+            return endData;
+        }
+    }
+    /**
+     *  calculates the size of the Seq column in the Table Spreadsheet view.
+     */
+    TableComp.prototype.recalculateSeqCol = function(){
+        var len = this.entries.length;
+        if(len <= 10){
+            len = 99;
+        }
+        var multiplier = Math.floor(Math.log(len)/Math.log(10)) + 2;
+        this.seqSize = TableComp_SEQCOLSIZE + 10 + ((multiplier - 1) * TableComp_SEQCOLSIZE);
+    }
+    /**
+     *  calculates the size of the Seq column in the Table Spreadsheet view.
+     */
+    TableComp.prototype.getSeqSizeInPixels = function(){
+        if(browserMajorVersion()>=6 && !this.isNetscape ){
+            return this.seqSize + 40;
+        }else if(this.isNetscape){
+            return this.seqSize + 10;
+        }else{
+            return this.seqSize + 20;
+        }
+    }
+    /**
+     *  Popup the TableEntryForm page.
+     */
+    TableComp.prototype.popupForm = function( actionCode ){                
+        var objectName = this.name + TableCompFormPostFix;
+        var callback = 'this.window.opener.document["' + objectName + '"].windowIsOpen = false';
+        var sb = "";
+        var entrySeq = Math.max (this.entries.length - 1, 0);
+        this.doc[objectName] = this;
+        // Fix For Bug#122477
+        // The pagetokens are copied from the parent table component object to the 
+        // child window.                
+        var parentTableElem = findJSOByName(this.formName, this.name);
+        this.doc[objectName+"PGTOKENS"] = parentTableElem['doc']["WINDOID_"+this.name+TableCompPostFix +"PGTOKENS"];        
+        
+        this.doc[objectName+"FORMNAME"] = this.formName;
+        
+        tcFormPopup = this.doc.parentWindow.open("",
+                            objectName,
+                            "toolbar=yes,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width=" + tcFormWidth + ",height=" + tcFormHeight);                                    
+        tcFormPopup.onunload = callback;
+
+        if(this.lastSelSeqNo==0){
+            this.lastSelSeqNo = entrySeq;
+        }
+        
+        // Request #151311 - fix editing of non-ascii characters in table components
+        // this form is located in TableEntry.jsp
+        var oForm = this.doc['TableEntryAddOrEditForm'];
+        
+        // Request #151424 Reset the form to it's original state (so that we don't keep reposting the original data).
+        // Calling .reset() just clears field contents, but we also need to delete the fields that we appended in getSingleInputTypeHidden.
+        // if an element has the "defaultField" class, this indicates it should NOT be removed, otherwise delte it.
+        oForm.reset();
+        if (oForm.childNodes) {
+            for(var i=oForm.childNodes.length-1;i>=0;i--) {
+            	if (oForm.childNodes[i].className != 'defaultField')
+            	    oForm.removeChild(oForm.childNodes[i]);
+                }
+        }
+                
+        if(actionCode != ACTION_ADD){
+             this.getSingleInputTypeHidden(oForm);
+        }
+        if(actionCode == ACTION_EDIT){
+            entrySeq = this.lastSelSeqNo;
+        }
+               
+        oForm.onUnload = callback;
+        oForm.ACTION_CODE.value = actionCode;        
+        oForm.TBL_PSF_ID.value = this.psfId;
+        oForm.PARENT_ID.value = this.parentId;
+        oForm.LAST_ENTRY_SEQ.value = entrySeq;
+        oForm.CURRENT_ENTRY_SEQ.value = this.lastSelSeqNo;
+        oForm.PROMPT.value = this.prompt;
+        oForm.TBL_VAL_ID.value = this.validationId;
+        oForm.TBL_VALIDATION_ID.value = this.validationId;
+        oForm.target = objectName
+        oForm.action = TableCompFormJsp;        
+        oForm.submit();        
+    }
+    //Html Handling functions
+    /**
+     * This is used for the copy/edit dialog, 
+     */ 
+    TableComp.prototype.getSingleInputTypeHidden = function(oForm){
+        var cols = [];
+        //At this point this code will only be called when one and only one entry is selected
+        //so using the variable this.lastSelSeqNo should be enough to help us determine which
+        //entry is selected.
+        cols = this.getInputTypeHidden(this.lastSelSeqNo, cols);
+        var sb = "";
+        for(var i=0;i<this.colDef.paramColumns.length;i++){
+            var toJoin = this.join(cols[this.colDef.paramColumns[i]]);
+            var oInput = document.createElement("INPUT");
+            oInput.type = "hidden";
+            oInput.name = this.colDef.paramColumns[i] + "HV";
+            oInput.value = toJoin;        
+            oForm.appendChild(oInput);
+        }
+        toJoin = this.join(cols[TABLE_ENTRY_ID]);
+        var oInput = document.createElement("INPUT");
+        oInput.type = "hidden";        
+        oInput.name = "TABLE_ENTRY_ID";
+        oInput.value = toJoin;                    
+        oForm.appendChild(oInput);
+        //return sb;
+    }
+    /**
+     * This is used when saving a request we need an extra parameter to denote saving whenever
+     * an entry is new or old.
+     */
+    TableComp.prototype.getAllInputTypeHidden = function(addToDoc, addToForm) {
+        var cols = [];
+        //collect
+        for(var k=1;k<this.entries.length;k++){
+            cols = this.getInputTypeHidden(k, cols);
+            if(cols[EVENT_CODE] == undef){
+                cols[EVENT_CODE] = [];
+            }
+            if(!this.entries[k].isUpdate){
+                cols[EVENT_CODE][k] = EVENT_INSERT;
+            }else if(this.entries[k].isUpdate && this.entries[k].isDirty){
+                cols[EVENT_CODE][k] = EVENT_UPDATE;
+            }else{
+                cols[EVENT_CODE][k] = EVENT_NOCHANGE;
+            }
+        }
+        var parentName = "";
+        parentName = this.name + "_";
+        this.updateFormElement(parentName + TABLE_ENTRY_ID, this.join(cols[TABLE_ENTRY_ID]), addToDoc, addToForm);
+        this.updateFormElement(parentName + EVENT_CODE, this.join(cols[EVENT_CODE],""), addToDoc, addToForm);
+        if(this.colDef==undef){
+            //this means this is being used in lookahead clear logic and colDef is not defined.
+            return;
+        }
+        for(var i=0;i<this.colDef.paramColumns.length;i++){
+            this.updateFormElement(parentName + this.colDef.paramColumns[i] + 'HV', this.join(cols[this.colDef.paramColumns[i]]), addToDoc, addToForm);
+        }
+        
+    }
+    /**
+     *  Utility Method used to update the html form element.
+     */
+    TableComp.prototype.updateFormElement = function(name, value, addToDoc, addToForm){
+        if (addToDoc == undef) {
+            addToDoc = this.doc;
+        }
+        if (addToForm == undef) {
+            addToForm = this.form;
+        }
+        // we should use the form to get the element instead of using document
+        // because there may be multiple forms in a document and getElementById
+        // will get the first element of the same name
+        //var input = addToDoc.getElementById(name);
+        var input = addToForm.elements[name];
+        if(input == undef){
+            input = addToDoc.createElement('input');
+            input.setAttribute('type', 'hidden');
+            input.setAttribute('name', name);
+            input.setAttribute('id', name);
+            addToForm.appendChild(input);
+        }
+        input.setAttribute('value', value);
+    }
+    /**
+     *  Utility method to join an array list that will become delimited by pass in parameter delimiter.
+     */
+    TableComp.prototype.join = function( arrayList, delimiter ){
+        var sb = "";
+        if(delimiter==undef){
+            delimiter = ".";
+        }
+        if(arrayList==undef || arrayList.length==0){
+            return sb;
+        }
+        sb = arrayList.join(delimiter);
+        if ( sb == delimiter )
+           return "";   //empty arrayList will be blank string instead of delimiter.
+    
+        if(delimiter.length>0){
+            for(var i=0;i<sb.length;i++){
+                if(sb.charAt(i)!="."){
+                    sb = sb.substring(i,sb.length);
+                    return sb;
+                }
+            }
+        }
+        return sb;
+    }
+    /**
+     *  This is a generic function that will generate a 2 dimensional array for building the input type
+     *  hidden html tags for saving and for using the table entry form.
+     */
+    TableComp.prototype.getInputTypeHidden = function( seq , cols ){
+        var entry = this.entries[seq];
+        var data = entry.data;
+        for(var i=0;i<this.colDef.paramColumns.length;i++){
+            if(cols[this.colDef.paramColumns[i]] == undef){
+                cols[this.colDef.paramColumns[i]] = [];
+            }
+            cols[this.colDef.paramColumns[i]][seq] = data[i];
+        }
+        if(cols[TABLE_ENTRY_ID] == undef){
+            cols[TABLE_ENTRY_ID] = [];
+        }
+        cols[TABLE_ENTRY_ID][seq] = entry.id;
+        return cols;
+    }
+    function TableTokenUtil(){
+        this.tablePageTokens = [];
+    }
+    var TableUtils = new TableTokenUtil();
+    /**
+     *  tokenName are in the form REQD.T.TABLE_TOKEN
+     */
+    TableTokenUtil.prototype.addTableToken = function(tokenName, tableComp, formName){
+        //change token name from REQD.P.TBL to REQD.T.TBL
+        tokenName = tokenName.replace(/\.P\./,".T.");
+        if(this.tablePageTokens[formName]==undef){
+            this.tablePageTokens[formName] = [];
+        }
+        this.tablePageTokens[formName][tokenName] = tableComp;
+    }
+    /**
+     *  This method returns a psuedo TableToken object which has the same 
+     *  methods as the Token object.
+     */
+    TableTokenUtil.prototype.getElement = function(tokenName, formName, quiet){
+        var tempObj;
+        var tableTokenPrefix = this.getTableTokenPrefix(tokenName);
+        var tableComp = this.tablePageTokens[formName][tableTokenPrefix];
+        if(tableComp!=undef){
+            tempObj = new TableToken(tableComp.getTableTokenValue(tokenName));
+        }else{
+            tempObj = new TableToken(tokenName);
+        }       
+        return tempObj;
+    }
+    /**
+     *  Extracts the tokens table token prefix.
+     */
+    TableTokenUtil.prototype.getTableTokenPrefix = function(tokenName){
+        //Find the first dot after "REQD.T." to do this we need to start after
+        //location 6
+        //  REQD.T.TBL
+        //  01234567
+        var index = tokenName.indexOf(".",7);
+        if(index!=-1){
+            return tokenName.substring(0,index)
+        }
+        return tokenName;
+    }
+    /**
+     *  Constructor for a TableCompToken this is similar to the standard Token Object.
+     */
+    function TableCompToken(tokenName, tableComp, formName, tableUtils){
+        //change token name from REQD.P.TBL to REQD.T.TBL
+        tokenName = tokenName.replace(/\.P\./,".T.");
+        this.tableUtils = tableUtils;
+        this.tableUtils.addTableToken(tokenName, tableComp, formName);
+        this.name = tokenName;
+
+        this.parentElement = tableComp;
+        //this.isVisibleToken = isVisible; getValue uses this.
+        this.formName = formName;
+        //this.getValue = _getValue;
+    
+        if(pageTokens[this.formName] == null) {
+            pageTokens[this.formName] = new Array();
+        }
+        if(tokenName != "" || tokenName != "undefined"){ //\\ this looks reaklly strange... shouldn't it be && instead of || ????
+            pageTokens[this.formName][tokenName] = this;
+            //Added to be able to iterate through pageTokens array.
+            pageTokens[this.formName][pageTokens.length++] = pageTokens[this.formName][tokenName];
+        }
+    }
+    /**
+     *  Helper method to extract a tabletoken object.
+     */
+    TableCompToken.prototype.getElement = function(tokenName, quiet){
+        return this.tableUtils.getElement(tokenName, this.formName, quiet);
+    }
+    TableCompToken.prototype.getValue = function(){
+        return "";
+    }
+    /**
+     *  TableToken Constructor.
+     */
+    function TableToken(value){
+        this.value = value;
+    }
+    TableToken.prototype.getValue = function(){
+        return new String(this.value);
+    }
+    /**
+     *  Entry Constructor
+     */
+    function Entry(tableDetailId, seqNo, fixId, data, visibleData){
+        this.id = tableDetailId;
+        this.seq = seqNo;
+        //use for html reference
+        this.fixId = fixId; 
+        this.data = data;
+        this.visibleData = visibleData;
+        this.isDirty = false;
+        if(tableDetailId == -1){
+            this.isUpdate = false;
+        }else{
+            this.isUpdate = true;
+        }
+        this.deleted = false;
+        // Used only in TableEntry Spreadsheet
+        this.cbElement = undef;
+        this.divObj = undef;
+        this.parentTC = undef;
+        this.txtDiv = undef;
+    }
+    /**
+     *  Entry Prototypes
+     */
+    Entry.prototype.setSeq = function(seq){
+        this.seq = seq;
+        this.setDirty(true);
+        if(this.txtDiv==undef){
+            this.txtDiv = this.getDoc().getElementById(TXT_DIV_PREFIX+this.fixId);
+        }
+        this.txtDiv.innerHTML = seq;
+        // innerText is faster but it doesn't work with Netscape.
+        //this.txtDiv.innerText = seq;
+        this.resetClass();
+    }
+    Entry.prototype.getId = function(){
+        return this.id;
+    }
+    Entry.prototype.setDirty = _setDirty
+    Entry.prototype.isUpdate = function (){
+        return this.isUpdate;
+    }
+    Entry.prototype.isNew = function (){
+        return !this.isUpdate;
+    }
+    Entry.prototype.setDeleted = function ( isDeleted ){
+        this.deleted = isDeleted;
+    }
+    Entry.prototype.isDeleted = function (){
+        return this.deleted;
+    }
+    Entry.prototype.getDoc = function(){
+        return this.parentTC.doc;
+    }
+    Entry.prototype.setDiv = function( divObj ){
+        this.divObj = divObj;
+    }
+    Entry.prototype.invalidateChildren = function(){
+        this.cbElement = undef;
+        this.txtDiv = undef;
+    }
+    Entry.prototype.getDiv = function (){
+        if(this.divObj == undef){
+            this.divObj = this.getDoc().getElementById(ENTRY_DIV_PREFIX + this.fixId);
+        }
+        return this.divObj;
+    }
+    Entry.prototype.isSelected = function(){
+        var chkbox;
+        if(this.cbElement != undef){
+            chkbox = this.cbElement;
+        }else{
+            chkbox = this.getCBElement();
+            if(chkbox==undef){
+                return false;
+            }
+        }
+        return chkbox.checked;
+    } 
+    Entry.prototype.setCBElement = function ( element ){
+        this.cbElement = element;
+        this.cbElement.parentEntry = this;
+    }
+    Entry.prototype.getCBElement = function(){
+        if(this.cbElement == undef && this.getDoc() != undef){
+            this.cbElement = this.getDoc().getElementById(CHKBOX_PREFIX + this.fixId);
+            if(this.cbElement != undef){
+                this.cbElement.parentEntry = this;
+                this.cbElement.onclick = chkbox_Click;
+            }
+        }
+        return this.cbElement;
+    }
+    Entry.prototype.resetClass = function(){
+        this.getDiv().className = this.getClassName();
+    }
+    Entry.prototype.updateButtonState = function(){
+        this.parentTC.updateButtonState();
+    }
+    Entry.prototype.getClassName = function(){
+        var chkbox = this.cbElement;
+      //  if(this.seq % 2 != 0){
+            if(chkbox != undef && chkbox.checked){
+                return "list-bdr-B rowhighlight";
+            }else{
+                return "list-bdr-B";
+            }
+        //}else{
+        //    if(chkbox != undef && chkbox.checked){
+        //        return "rowevenhighlight2";
+        //    }else{
+        //        return "roweven2";
+        //    }
+        //}
+    }
+    Entry.prototype.onclick = function(){
+        this.resetClass();
+        this.updateButtonState();
+    }
+    chkbox_Click = function(parentTableComp, entryNo){
+        this.parentEntry.onclick();
+    }
+    Entry.prototype.check = function(){
+        var chkbox = this.getCBElement();
+        if(chkbox != undef){
+            chkbox.checked = true;
+        }
+        this.resetClass();
+    }
+    Entry.prototype.uncheck = function(){
+        var chkbox = this.getCBElement();
+        if(chkbox != undef){
+            chkbox.checked = false;
+        }
+        this.resetClass();
+    }
+    /**
+     *  Entry Prototypes
+     *  Column Definition Constructor
+     *  names = ['Product Name','Description','Quatity']
+     *  tokens = ['PROD_NAME','DESCRIPTION','QUANTITY']
+     *  The rest are the same
+     *  parameterColumns = ['C_1','C_42','C_3']
+     */
+    function ColDef(names, tokens, widths, dataMaskCodes, requiredFlags, displayTotalFlags, paramColumns, componentTypeCodes){
+        this.names = names;
+        this.tokens = tokens;
+        this.widths = widths;
+        this.requiredFlags = requiredFlags;
+        this.displayTotalFlags = displayTotalFlags;
+        this.dataMaskCodes = dataMaskCodes;
+        this.paramColumns = paramColumns;
+        this.componentTypeCodes = componentTypeCodes;
+    }
+    /**    
+     *     Button State Object
+     */    
+    var TEButtonIds = [];
+    TEButtonIds[ACTION_ADD]                 = 'addButton';
+    TEButtonIds[ACTION_EDIT]                = 'editButton';
+    TEButtonIds[ACTION_COPY]                = 'copyButton';
+    TEButtonIds[ACTION_DELETE]              = 'deleteButton';
+    TEButtonIds[ACTION_UP]                  = 'upButton';
+    TEButtonIds[ACTION_DOWN]                = 'downButton';
+    TEButtonIds[ACTION_CHECK_ALL]           = 'checkAll';
+    TEButtonIds[ACTION_UNCHECK_ALL]         = 'uncheckAll';
+    // the on of off images will be generated on TableEntry.jsp using resource bundle values when the page is loaded
+    // we only need to initialize the variables for now
+    var TEButtonImageOn = [];
+    var TEButtonImageOff = [];
+
+    var TEButtonOnScript = [];
+    TEButtonOnScript[ACTION_ADD]  = '<a href="javascript:tablecomp.addClick();">Add</a>';
+    TEButtonOnScript[ACTION_EDIT] = '<a href="javascript:tablecomp.editClick();">Edit</a>';
+    TEButtonOnScript[ACTION_COPY] = '<a href="javascript:tablecomp.copyClick();">Copy</a>';
+    TEButtonOnScript[ACTION_DELETE] = '<a href="javascript:tablecomp.deleteClick();">Delete</a>';
+    TEButtonOnScript[ACTION_UP] = '';
+    TEButtonOnScript[ACTION_DOWN] = '';
+    TEButtonOnScript[ACTION_CHECK_ALL] = '<a href="javascript:tablecomp.checkAll();">Check All</a>';
+    TEButtonOnScript[ACTION_UNCHECK_ALL] = '<a href="javascript:tablecomp.uncheckAll();" style="width:90;">Clear All</a>';
+    var TEButtonOffScript = [];
+    TEButtonOffScript[ACTION_ADD]  = '<a>Add</a>';
+    TEButtonOffScript[ACTION_EDIT] = '<a>Edit</a>';
+    TEButtonOffScript[ACTION_COPY] = '<a>Copy</a>';
+    TEButtonOffScript[ACTION_DELETE] = '<a>Delete</a>';
+    TEButtonOffScript[ACTION_UP] = '';
+    TEButtonOffScript[ACTION_DOWN] = '';
+    TEButtonOffScript[ACTION_CHECK_ALL] = '<a >Check All</a>';
+    TEButtonOffScript[ACTION_UNCHECK_ALL] = '<a style="width:90">Clear All</a>';
+
+
+    function ButtonState(doc){
+        this.isButtonOn = [];
+        this.isButtonOn[ACTION_ADD] = true;
+        this.isButtonOn[ACTION_EDIT] = false;
+        this.isButtonOn[ACTION_COPY] = false;
+        this.isButtonOn[ACTION_DELETE] = false;
+        this.isButtonOn[ACTION_UP] = false;
+        this.isButtonOn[ACTION_DOWN] = false;
+        this.isButtonOn[ACTION_CHECK_ALL] = true;
+        this.isButtonOn[ACTION_UNCHECK_ALL] = true;
+        this.canTurnButtonsOn = true;
+        this.doc = doc;
+        this.cacheButton = [];
+    }
+    ButtonState.prototype.getDoc = function(){
+        return this.doc;
+    }
+    ButtonState.prototype.canDo = function(action){
+        return this.isButtonOn[action] && this.canTurnButtonsOn;
+    }
+    ButtonState.prototype.turnOffAll = function(){
+        this.canTurnButtonsOn = false;
+    }
+    ButtonState.prototype.turnOnPossible = function(){
+        this.canTurnButtonsOn = true;
+    }
+    /**
+     *  method that repaints all the buttons on the TableComp Spread sheet view.
+     */
+    ButtonState.prototype.repaint = function(){
+        var obj;
+        for(var prop in this.isButtonOn){
+            if(this.isButtonOn[prop] != undef && (typeof this.isButtonOn[prop] == 'boolean')){
+                for(var i=1;i<3;i++){
+                    if(this.cacheButton[TEButtonIds[prop]+i]==undef){
+                        obj = this.getDoc().getElementById(TEButtonIds[prop]+i);
+                    }else{
+                        obj = this.cacheButton[TEButtonIds[prop]+i];
+                    }
+                    if(obj!=undef){
+                        this.cacheButton[TEButtonIds[prop]+i] = obj;
+                        if (this.isButtonOn[prop] && this.canTurnButtonsOn){
+			      if (prop == ACTION_UP || prop == ACTION_DOWN){
+                                 obj.src = this.getDoc().parentWindow.TEButtonImageOn[prop];
+			      } else{
+			      obj.className = 'secBtn';
+                              obj.innerHTML = this.getDoc().parentWindow.TEButtonOnScript[prop];
+			    }
+                        } else{
+			      if (prop == ACTION_UP || prop == ACTION_DOWN){
+                                 obj.src = this.getDoc().parentWindow.TEButtonImageOff[prop];
+			      } else {
+                              obj.className = 'secBtn secBtnDis';
+                              obj.innerHTML = this.getDoc().parentWindow.TEButtonOffScript[prop];
+                              }			   
+                        }
+                    }
+                }
+            }
+        }
+    }
+    /**
+     *  Utility method to copy arrays.
+     */
+    function copy_Array(oldArray){
+        var oldA = oldArray;
+        var newA = [];
+        for(var property in oldA){
+            newA[property] = oldA[property];
+        }
+        return newA;
+    }
+    /**
+     *  Utility method to copy an Entry
+     */
+    function copy_Entry(oldEntry){
+        var localData;
+        localData = copy_Array(oldEntry.data);
+        localVisibleData = copy_Array(oldEntry.visibleData);
+        var nEntry = new Entry(oldEntry.id, oldEntry.seq, oldEntry.fixId, localData, localVisibleData);
+        nEntry.setDirty(oldEntry.isDirty);
+        return nEntry;
+    }
+    /**
+     *  Utility method to copy a TableComp javascript Object.
+     */
+    function copy_TableComp(oldTC){
+        var newTC = new TableComp();
+        for(var prop in oldTC){
+            if(typeof oldTC[prop] != 'object' && typeof newTC[prop] != 'object'){
+                newTC[prop] = oldTC[prop];
+            }
+        }
+        newTC.colDef = copy_ColDef(oldTC.colDef);
+        for(var i=0;i<oldTC.entries.length;i++){
+            if(oldTC.entries[i] != undef){
+                newTC.entries[i] = copy_Entry(oldTC.entries[i]);
+                newTC.entries[i].parentTC = newTC;
+            }
+        }
+        return newTC;
+    }
+    /**
+     *  Utility Method to copy a Column Definition javascript object.
+     */
+    function copy_ColDef(oldColDef){
+        var nColDef = new ColDef(
+            copy_Array(oldColDef.names),
+            copy_Array(oldColDef.tokens),
+            copy_Array(oldColDef.widths),
+            copy_Array(oldColDef.dataMaskCodes),
+            copy_Array(oldColDef.requiredFlags),
+            copy_Array(oldColDef.displayTotalFlags),
+            copy_Array(oldColDef.paramColumns),
+            copy_Array(oldColDef.componentTypeCodes)
+        );   
+        return nColDef;     
+    }
+    function isNetscape(){
+        return (navigator.appVersion.indexOf("MSIE") == -1)
+    }

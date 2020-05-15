@@ -42,8 +42,8 @@ namespace SRS
                 .AddRazorPagesOptions(options =>
                 {
                     options.Conventions.AuthorizePage("/Index");
-                    options.Conventions.AuthorizeFolder("/Account", "RequiredAdministrator");
-                    options.Conventions.AuthorizeFolder("/Role", "RequiredAdministrator");
+                   // options.Conventions.AuthorizeFolder("/Account", "RequiredAdministrator");
+                   // options.Conventions.AuthorizeFolder("/Role", "RequiredAdministrator");
                 });
         }
 

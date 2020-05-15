@@ -1,0 +1,275 @@
+﻿@page
+@model SRS.Pages.WO.DetailsModel
+
+@{
+    ViewData["Title"] = "Details";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>WorkOrder</h4>
+    <hr />
+
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-12">
+                    <!-- Default box -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">WO Identification</h3>
+
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse" data-toggle="tooltip" title="Collapse">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                                <button type="button" class="btn btn-tool" data-card-widget="remove" data-toggle="tooltip" title="Remove">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+
+                            <div class="container">
+
+                                <div class="row">
+                                    <div class="form-group">
+                                        <div class="col-sm-6"><label class="col-form-label" asp-for="WorkOrder.Description"></label></div>
+                                        <div class="col-sm-6"><div class="custom-class">WorkOrder.Description</div></div>
+                                    </div>
+
+                                    <div class="col-sm-4">
+                                        <b>WO Number:</b>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        383416
+                                    </div>
+                                    <div class="col-sm-4">
+
+                                    </div>
+                                    <div class="col-sm-4">
+
+                                    </div>
+                                    <div class="col-sm-4">
+
+                                    </div>
+                                    <div class="col-sm-4">
+
+                                    </div>
+                                </div>
+                                <div class="row">
+
+                                    <div class="col-sm-4">
+                                        <b>Workflow:</b>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <input class="form-control" />
+                                    </div>
+                                    <div class="col-sm-4">
+                                        
+                                    </div>
+                                </div>
+                                
+
+                            </div>
+                        </div>
+
+
+
+                        <div class="card-body">
+
+                            <div class="container">
+                                
+                                <div class="row">
+                                    <div class="col-sm-4 col-md-4">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-md-6"><b>Client Work Request ID Prefix:</b> </div>
+                                            <div class="col-sm-12 col-md-6">CHL_ACCMgt</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4 col-md-4">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-md-6"><b>@Html.DisplayNameFor(model => model.WorkOrder.ClientWorkRequestIDNumber):</b></div>
+                                            <div class="col-sm-12 col-md-6">90</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4 col-md-4">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-md-6"><b>@Html.DisplayNameFor(model => model.WorkOrder.ZurichSubProjectCode):</b></div>
+                                            <div class="col-sm-12 col-md-6">div6</div>
+                                        </div>
+                                       
+                                    </div>
+                                </div>
+
+
+                                <div class="row">
+                                    <div class="col-sm-4 col-md-4">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-md-6"><b>@Html.DisplayNameFor(model => model.WorkOrder.ClientWorkRequestIDPrefix):</b> </div>
+                                            <div class="col-sm-12 col-md-6">CHL_ACCMgt</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4 col-md-4">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-md-6"><b>@Html.DisplayNameFor(model => model.WorkOrder.ClientWorkRequestIDNumber):</b></div>
+                                            <div class="col-sm-12 col-md-6">90</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-4 col-md-4">
+                                        <div class="row">
+                                            <div class="col-sm-12 col-md-6"><b>@Html.DisplayNameFor(model => model.WorkOrder.ZurichSubProjectCode):</b></div>
+                                            <div class="col-sm-12 col-md-6"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="row">
+
+                                    <div class="col-sm-6">   </div>
+                                    <div class="col-sm-6"></div>
+                                    <div class="col-sm-6"> </div>
+                                    <div class="col-sm-6">90</div>
+                                    <div class="col-sm-6"><b>@Html.DisplayNameFor(model => model.WorkOrder.ZurichSubProjectCode):</b> </div>
+                                    <div class="col-sm-6"></div>
+                                    <div class="col-sm-4"> </div>
+                                    <div class="col-sm-4"></div>
+
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- /.card -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <dl class="row">
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.Description)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientWorkRequestIDPrefix)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.MostRecentNote)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.MostRecentNote)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.RequestStatus)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.RequestStatus)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.WONumber)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.WONumber)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.Workflow)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.Workflow)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.WOTitle)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.WOTitle)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientWorkRequestIDPrefix)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientWorkRequestIDPrefix)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientWorkRequestIDNumber)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientWorkRequestIDNumber)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ZurichSubProjectCode)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ZurichSubProjectCode)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.BusinessUnitID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.BusinessUnitID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientWorkRequestID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientWorkRequestID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.RelatedWorkOrderRequests)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.RelatedWorkOrderRequests)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.GAMSRNumber)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.GAMSRNumber)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.GAMSRNumberLink)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.GAMSRNumberLink)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientSAPID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientSAPID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientStrategicProgramID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientStrategicProgramID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientProgramID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientProgramID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientProjectID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientProjectID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientStrategicProjectID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientStrategicProjectID)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-page="./Edit" asp-route-id="@Model.WorkOrder.ID">Edit</a> |
+    <a asp-page="./Index">Back to List</a>
+</div>

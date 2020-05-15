@@ -1,0 +1,96 @@
+// Javascript objects to handle status display and functions to expand/collapse sections 
+// Included by RequestDetail.jsp
+
+var HIDDEN_WFSE_PREFIX = "HIDDEN_ECWFS_";  // must be same as com.kintana.core.web.util.WebConstants.HIDDEN_WFSE_PREFIX
+
+var statusRowSet = new Array();
+var statusRowHeader;
+var frameHeight;
+var frameWidth;
+var topSource = this;
+
+// StatusRowHeader is an Object representing the header row of Request Workflow Status 
+
+function StatusRowHeader(seqHeader, stepNameHeader, stepStatusHeader, usernameHeader, dateHeader){
+    this.seqHeader = seqHeader;
+    this.stepNameHeader = stepNameHeader;
+    this.stepStatusHeader = stepStatusHeader;
+    this.usernameHeader = usernameHeader;
+    this.dateHeader = dateHeader;
+}
+
+function getStatusRowHeader(){
+   return statusRowHeader;
+}
+
+
+// StatusRow is an Object that represents one row of the Request Workflow Status. 
+
+function StatusRow(seq,stepName,stepURL,statusName,statusAction,username,date,isSubWorkflow,isCollapsed, rowClass, logLink, entityLink){
+    this.seq = seq;
+    this.stepName = stepName;
+    this.stepURL = stepURL;
+    this.statusName = statusName;
+    this.statusAction = statusAction;
+    this.username = username;
+    this.date = date;
+    this.isLeaf = (isSubWorkflow=="Y")? false:true;
+    this.isCollapsed = (isCollapsed=="Y")?true:false;
+    this.rowClass = rowClass;
+    this.logLink = logLink;
+    this.entityLink = entityLink;
+}
+
+function getStatusRowSet(){
+    return statusRowSet;
+}
+
+// Called from Inline Frame when an expand/collapse happens 
+
+function redrawInlineFrame(row,isCollapsed){
+   document.rdf.elements[HIDDEN_WFSE_PREFIX+statusRowSet[row].seq].value = isCollapsed;
+   statusRowSet[row].isCollapsed = isCollapsed;
+   //window.frames["RequestInlineStatus"].location.href='RequestInlineStatus.jsp?SCROLL_TO=' + statusRowSet[row].seq;
+   window.frames["RequestInlineStatus"].location.href='RequestInlineStatus.jsp';
+   if (browserVersion.indexOf('Netscape6') > 0){
+       // For some reason, Netscape 6 will not reload the page the first time you call!
+       window.frames["RequestInlineStatus"].location.href='RequestInlineStatus.jsp?SCROLL_TO=' + statusRowSet[row].seq;
+   }
+}
+
+// Called when expandAll button is pressed 
+
+function expandAll(){
+   var collapseCount = 0;
+   for( row=0; row < statusRowSet.length; row++ ){
+       if(!statusRowSet[row].isLeaf){
+           if(statusRowSet[row].isCollapsed){
+               collapseCount++;
+               statusRowSet[row].isCollapsed=false;
+               document.rdf.elements[HIDDEN_WFSE_PREFIX+statusRowSet[row].seq].value = false;
+           }
+       }
+   }
+   if(collapseCount > 0){
+       window.frames["RequestInlineStatus"].location.href='RequestInlineStatus.jsp';
+   }
+}
+
+// Called when collapseAll button is pressed 
+
+function collapseAll(){
+   var expandCount = 0;
+   for( row=0; row < statusRowSet.length; row++ ){
+       if(!statusRowSet[row].isLeaf){
+           if(!statusRowSet[row].isCollapsed){
+               expandCount++;
+               statusRowSet[row].isCollapsed=true;
+               document.rdf.elements[HIDDEN_WFSE_PREFIX+statusRowSet[row].seq].value = true;
+           }
+       }
+   }
+   if(expandCount > 0){
+       window.frames["RequestInlineStatus"].location.href='RequestInlineStatus.jsp';
+   }
+}
+

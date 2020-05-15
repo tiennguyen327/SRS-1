@@ -1,0 +1,241 @@
+// included by ReferencesPanel.jsp
+
+// constants for references panel
+var ATTACHMENT_ENTITY_ID = "55";
+var RELEASE_ENTITY_ID = "38";
+
+// These delimiters should match those in KintanaReferenceHelper.java
+var PARAM_DELIMITER = ".";
+var REF_ID_BEHAVIOR_CODE_DELIMITER = ":";
+
+function validateButtons(formName) {
+  var openValid = false;
+  var removeValid = false;
+  
+    for (var i = 0; i < document[formName].REFERENCE_LIST_BOX.options.length; i++) {
+      if (document[formName].REFERENCE_LIST_BOX.options[i].selected) { // cannot open attachment if not saved yet
+        removeValid = true;
+        if (refListBox.getValueAt(i).targetTypeCode != ATTACHMENT_ENTITY_ID) {
+            openValid = true;
+        }
+        break;
+      }
+    }
+  
+  if (openValid) {
+    document.getElementById('OpenRef').className = 'secBtn';
+    document.getElementById('OpenRef').innerHTML = '<a href="'+openRefLink+'">Open</a>';
+  } else {
+    document.getElementById('OpenRef').className = 'secBtn secBtnDis';
+    document.getElementById('OpenRef').innerHTML = '<a>Open</a>';
+  }
+  
+  if (removeValid) {
+    document.getElementById('RemoveRef').className = 'secBtn';
+    document.getElementById('RemoveRef').innerHTML = '<a href="' + removeRefLink + '">Remove</a>';
+  } else {
+    document.getElementById('RemoveRef').className = 'secBtn secBtnDis';
+    document.getElementById('RemoveRef').innerHTML = '<a>Remove</a>';
+  }
+}
+
+function openRef(formName) {
+  var opts = document[formName].REFERENCE_LIST_BOX.options;
+  var currentURL = "";
+
+  for (var i = 0; i < opts.length; i++) {
+    var targetEntityID = refListBox.getValueAt(i).targetTypeCode;
+    if (opts[i].selected && targetEntityID != ATTACHMENT_ENTITY_ID && targetEntityID != RELEASE_ENTITY_ID) { // cannot open attachment or release
+        currentURL = opts[i].value;
+        // we'll need to add that or popup window will try to append this url to the base url
+        if (currentURL.indexOf('://') == -1) {
+            currentURL = 'http://' + currentURL;
+        }
+
+        if (base_url == undef || base_url == null || currentURL.indexOf(base_url) == -1) {
+            popupExternalUrlWindow(currentURL, null);
+        } else {
+            gotoUrlRefs(currentURL);
+        }
+    }
+  }
+}
+
+function removeRef(formName) {
+  var opts = document[formName].REFERENCE_LIST_BOX.options;
+  for (var i = opts.length - 1; i >= 0; i--) {
+    if (opts[i].selected) {
+      refListBox.removeAt(i);
+    }
+  }
+  validateButtons(formName);
+}
+
+function addReference(newRef, formName) {
+  if (refListBox == null){
+    return; 
+  }
+  refListBox.addValue(newRef);
+  var newOption = new Option();
+  newOption.text = newRef.getDisplayText();
+  newOption.value = newRef.getLink();
+
+  document[formName].REFERENCE_LIST_BOX.options[document[formName].REFERENCE_LIST_BOX.options.length]=newOption;
+}
+
+// Note: These component names need to match those in WebConstants.java
+// They aren't passed as arguments to this function since there doesn't seem a good way to
+// dynamically call the different accessors of the Reference object
+
+/**
+ * This function encodes parameters like this:
+ *   12.asdfjklzxoes.5.asdfw.
+ */
+function encodeReferenceParams(formName) {
+  if (refListBox == null){
+    return; 
+  }
+  var encodedTypeCodeValue = "";
+  var encodedTargetIdValue = "";
+  var encodedNameValue = "";
+  var encodedRefRelIdValue = "";
+  var encodedRefBehaviorCodeValue = "";
+  var encodedDescValue = "";
+  var encodedStoredFilename = "";
+  var encodedLink = "";
+  var encodedRefType = "";
+  var encodedRelationshipName = "";
+   
+  // encode values for new references
+  for (var i = 0; i < refListBox.getLength(); i++) {
+    var ref = refListBox.getValueAt(i);
+    encodedTypeCodeValue = encodedTypeCodeValue + ref.targetTypeCode.toString().length + PARAM_DELIMITER + ref.targetTypeCode + PARAM_DELIMITER;
+    encodedTargetIdValue = encodedTargetIdValue + ref.targetId.toString().length + PARAM_DELIMITER + ref.targetId + PARAM_DELIMITER;
+    encodedNameValue = encodedNameValue + ref.referenceName.toString().length + PARAM_DELIMITER + ref.referenceName + PARAM_DELIMITER;
+    encodedRefRelIdValue = encodedRefRelIdValue + ref.refRelationshipId.toString().length + PARAM_DELIMITER + ref.refRelationshipId + PARAM_DELIMITER;
+    encodedRefBehaviorCodeValue = encodedRefBehaviorCodeValue + ref.refBehaviorCode.length + PARAM_DELIMITER + ref.refBehaviorCode + PARAM_DELIMITER;
+    encodedDescValue = encodedDescValue + ref.description.length + PARAM_DELIMITER + ref.description + PARAM_DELIMITER;
+    encodedStoredFilename = encodedStoredFilename + ref.storedFilename.length + PARAM_DELIMITER + ref.storedFilename + PARAM_DELIMITER;
+    encodedLink = encodedLink + ref.link.length + PARAM_DELIMITER + ref.link + PARAM_DELIMITER;
+    encodedRefType = encodedRefType + ref.referenceType.length + PARAM_DELIMITER + ref.referenceType + PARAM_DELIMITER;
+    encodedRelationshipName = encodedRelationshipName + ref.relationshipName.length + PARAM_DELIMITER + ref.relationshipName + PARAM_DELIMITER;
+   }
+
+  document[formName].TARGET_TYPE_CODE.value = encodedTypeCodeValue;
+  document[formName].TARGET_ID.value = encodedTargetIdValue;
+  document[formName].REFERENCE_NAME.value = encodedNameValue;
+  document[formName].REF_RELATIONSHIP_ID.value = encodedRefRelIdValue;
+  document[formName].REF_BEHAVIOR_CODE.value = encodedRefBehaviorCodeValue;
+  document[formName].REFERENCE_DESCRIPTION.value = encodedDescValue;
+  document[formName].STORED_FILENAME.value = encodedStoredFilename;
+  document[formName].REF_LINK.value = encodedLink;
+  document[formName].REFERENCE_TYPE.value = encodedRefType;
+  document[formName].RELATIONSHIP_NAME.value = encodedRelationshipName;
+  
+  
+  var encodedUpdatedBehaviorCode = "";
+  // encode values for changed references
+  for (var i = 0; i < changedBehaviorCodes.getSize(); i++) {    
+    // returns a Hashtable.KeyValue object
+    var keyValue = changedBehaviorCodes.getElementAt(i);
+    // concat ref id and new behavior code:  <ref id>:<new behavior code>
+    var idCode = keyValue.key.toString() + REF_ID_BEHAVIOR_CODE_DELIMITER + keyValue.value.toString();
+    encodedUpdatedBehaviorCode = encodedUpdatedBehaviorCode + idCode.length + PARAM_DELIMITER + idCode + PARAM_DELIMITER;
+  }
+
+  document[formName].UPDATED_BEHAVIOR_CODE.value = encodedUpdatedBehaviorCode;
+}
+
+// called when relationship changes
+// This turns out to be slightly dependent upon the implementation of Hashtable.js
+// It assumes chaining on collisions, with the more recent values towards the end of the list.
+// We would prefer that the values were instead replaced when the key is entered multiple times
+function relationshipChanged(refID, relDropDown) {
+    var relationshipFunc = eval("getRelationshipBehaviorCodeFor" + relDropDown.name);
+    changedBehaviorCodes.add(refID.toString(), relationshipFunc(relDropDown.selectedIndex));
+}
+
+// map ref id -> new behavior code
+var changedBehaviorCodes = new Hashtable();
+
+// when an entity is created from the references section of another entity, this function
+// is called to map the values of the User Data and Detail Fields from the parent entity
+// to the created entity.  The 'opener' is window object for the parent entity.
+function mapParentFieldTokensToFields(formName, openerFormName, entityTokenPrefix, openerEntityTokenPrefix) {
+    // turn off alert to make getTokenValue() quiet
+    var savedShowAlert = showAlert;
+    var savedOpenerShowAlert = opener.showAlert;
+    showAlert = false;
+    opener.showAlert=false;
+
+    for (var i=0; i < pageTokens[formName].length; i++) {
+        if (pageTokens[formName][i] != null &&
+            pageTokens[formName][i].name != null &&
+            (pageTokens[formName][i].name.indexOf(entityTokenPrefix + '.UD.') == 0 ||  // only map User Data
+             pageTokens[formName][i].name.indexOf(entityTokenPrefix + 'D.P.') == 0)) { // and Detail Fields
+            
+            try {
+                var tokenName = pageTokens[formName][i].name.substring(entityTokenPrefix.length); // strip out the entity prefix
+                tokenName = tokenName.substring('.UD.'.length); // strip out the '.UD.' or 'D.P.', they are the same length
+                
+                if (opener.pageTokens[openerFormName][openerEntityTokenPrefix + '.UD.' + tokenName] != null) {
+                    // matched with opener's user data field
+                    tokenName = openerEntityTokenPrefix + '.UD.' + tokenName;
+                } else {
+                    // need to check opener's detail field
+                    tokenName = openerEntityTokenPrefix + 'D.P.' + tokenName;
+                }
+    
+                if (opener.pageTokens[openerFormName][tokenName] != null) {
+                    if (pageTokens[formName][i].parentElement.getTokenValue == yesnoradioButton_getTokenValue) {
+                        // yes/no radio needs special handling because the html dom represents it as two objects            
+                        if (opener.pageTokens[openerFormName][tokenName].parentElement.getTokenValue() == 'Y') {
+                            pageTokens[formName][i].parentElement.setValue('1.1.Y.Y');
+                        } else if (opener.pageTokens[openerFormName][tokenName].parentElement.getTokenValue() == 'N') {
+                            pageTokens[formName][i].parentElement.setValue('1.1.N.N');
+                        } // otherwise, unknown value, so don't map the token
+                    } else if ( pageTokens[formName][i].parentElement.setValue != null
+                                && ( pageTokens[formName][i].parentElement.getTokenValue == dateField_getTokenValue 
+                                     || pageTokens[formName][i].parentElement.getTokenValue == ddl_getTokenValue
+                                     || pageTokens[formName][i].parentElement.getTokenValue == textArea_getTokenValue
+                                     || pageTokens[formName][i].parentElement.getTokenValue == std_getTokenValue) ) {
+                        if(opener.pageTokens[openerFormName][tokenName].parentElement.getTokenValue == opener.DropDownList.prototype.getTokenValue
+                           //REQUEST #155151
+                           //When a 'Hidden Field' component gets copied over, we should get the full token value (so that the hidden field's parameters 
+                           //and visible parameters are set correctly in the database) 
+                           || opener.pageTokens[openerFormName][tokenName].parentElement.getTokenValue == opener.HiddenField.prototype.getTokenValue
+                    	   || opener.pageTokens[openerFormName][tokenName].parentElement.getTokenValue == opener.AutoComplete.prototype.getTokenValue) {                    	   	
+                    	   	pageTokens[formName][i].parentElement.setValue(
+                          	   opener.pageTokens[openerFormName][tokenName].parentElement.getValue() );
+                    	} else {
+	                        pageTokens[formName][i].parentElement.setValue(
+	                          opener.pageTokens[openerFormName][tokenName].parentElement.getTokenValue() );
+                        }
+                    } else if ( pageTokens[formName][i].parentElement.getTokenValue == autoComplete_getTokenValue ) {
+                        pageTokens[formName][i].parentElement.setValue( 
+                          opener.pageTokens[openerFormName][tokenName].parentElement.currentCSValue );
+                    } else if ( pageTokens[formName][i].parentElement.getTokenValue == textField_getTokenValue ) {
+                        pageTokens[formName][i].parentElement.setValue(
+                          opener.pageTokens[openerFormName][tokenName].parentElement.valueElement.value );
+                    } else if(pageTokens[formName][i].parentElement.getTokenValue == CommonField.prototype.getTokenValue){
+                        pageTokens[formName][i].parentElement.applyChanges(
+                          opener.pageTokens[openerFormName][tokenName].parentElement.getValue(),
+                          opener.pageTokens[openerFormName][tokenName].parentElement.viewable);
+                    } else if ( pageTokens[formName][i].parentElement != null &&
+                                pageTokens[formName][i].parentElement.element != null &&
+                                opener.pageTokens[openerFormName][tokenName].parentElement != null &&
+                                opener.pageTokens[openerFormName][tokenName].parentElement.element != null) { 
+                        // map tokens through the html element
+
+                        pageTokens[formName][i].parentElement.element.value = 
+                            opener.pageTokens[openerFormName][tokenName].parentElement.element.value ;                          
+                    }
+                    // Password and Attachment components are not mapped
+                }
+            } catch (er) {}
+        }
+    }
+
+    showAlert = savedShowAlert;
+    opener.showAlert=savedOpenerShowAlert;
+}

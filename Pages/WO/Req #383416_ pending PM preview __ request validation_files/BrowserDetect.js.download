@@ -1,0 +1,16 @@
+// this function returns the current browser
+function whichBrowser() {
+	var agent = navigator.userAgent.toLowerCase();
+	this.major = parseInt(navigator.appVersion);
+	this.minor = parseFloat(navigator.appVersion);
+	
+	this.mozilla5 = (agent.indexOf('mozilla/5') != -1);
+	this.ie  = (agent.indexOf("msie")!= -1);
+	this.ie4 = (this.ie && (this.major == 4) && (agent.indexOf("msie 5.")== -1));
+	this.ie5 = (this.ie && (this.major >= 4)&& (agent.indexOf("msie 5.")!=-1));
+	this.ie6 = (this.ie && (agent.indexOf("msie 6.") != -1));
+	if(this.mozilla5) return "MOZILLA5";
+	if(this.ie6) return "IE6UP";
+	if(this.ie5) return "IE5";
+	if(this.ie4) return "IE4";
+}

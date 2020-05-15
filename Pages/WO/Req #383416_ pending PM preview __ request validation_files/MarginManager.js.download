@@ -1,0 +1,117 @@
+// This file uses JavaScript to lock things onto the right side of the
+// screen so that the user doesn't have to scroll to see it, since
+// there's no style to express that.
+var undefined;
+var isIE = (document.all) ? true : false;
+
+
+/**
+ * Constructs the margin manager
+ **/
+function ITGMarginManager() {
+    this.itg_objs = new Array();
+    this.itg_oldWindowOnresize = window.onresize;
+    window.onresize = function() {
+        if(itgMarginManager.itg_oldWindowOnresize!=null){
+            itgMarginManager.itg_oldWindowOnresize();
+        }
+        itgMarginManager.handleResize();
+    }
+}
+
+
+
+function ITGMMargin(objId, margin) {
+    this.objId = objId;
+    this.rightMargin = margin;
+}
+
+
+
+/**
+ * Causes the object with the given ID to lock onto the side of
+ * the screen.
+ **/
+function ITGMarginManager_lockToBrowserWidth(objId, margin) {
+    this.itg_objs[this.itg_objs.length] = new ITGMMargin(objId, margin);
+}
+ITGMarginManager.prototype.lockToBrowserWidth = ITGMarginManager_lockToBrowserWidth;
+
+
+//function getOffset(elem) {
+//	return 0;
+//}
+
+function getOffset(elem) {
+    var space = 0;
+    var p = elem;
+    var log = "";
+    while (p != undefined) {
+        space += p.offsetLeft;
+        //if(log == "") {
+        //	log = p.offsetLeft;
+        //} else {
+        //	log = log + ", " + p.offsetLeft;
+       	//}
+        p = p.offsetParent;
+    }
+    //alert("getOffset values: " + log);
+    if(document.dir == 'rtl') {
+        space += elem.offsetWidth;
+    }
+    return space;
+}
+
+
+/**
+ * Called when the window resizes, this method sizes all of the
+ * registered objects so that they are the same width as the browser.
+ **/
+function ITGMarginManager_handleResize() {
+    var w = document.body.clientWidth;
+    //var rpt = "";
+    var newWidth = new Array();
+    for (var i = 0; i < this.itg_objs.length; ++i) {
+        var m = this.itg_objs[i];
+        var e = document.getElementById(m.objId);
+        var offset = getOffset(e);
+        if(document.dir == 'ltr') {
+	        newWidth[i] = w - offset - m.rightMargin - 5;  //Margin fudge factor.
+    	} else {
+    		newWidth[i] = offset - m.rightMargin - 5;  //Margin fudge factor.
+    	}
+    
+        //e.style.backgroundColor = 'red';
+    	//rpt = rpt + m.objId + ": " + newWidth[i] + ", offset = " + offset + ", offsetWidth = " + e.offsetWidth + "\n";
+    }
+    //rpt = rpt + "clientWidth = " + w + "\n";
+    
+    //alert(rpt);
+    for(var i = 0; i < this.itg_objs.length; i++) {
+        var obj = document.getElementById(this.itg_objs[i].objId);
+        if(this.itg_objs[i].objId.indexOf("DIV_EXPAND") != -1) {
+          	obj.style.width = newWidth[i];
+        } else {
+    	    obj.width = newWidth[i];
+    	}
+    }
+}
+ITGMarginManager.prototype.handleResize = ITGMarginManager_handleResize;
+
+
+var previouslyDefinedITGMarginManager;
+if (itgMarginManager) {
+    // This has already been defined!  Let's not make two, because the
+    // window resize handlers will not install properly.  I love
+    // global variables.
+   previouslyDefinedITGMarginManager = itgMarginManager;
+}
+
+
+var itgMarginManager;
+if (previouslyDefinedITGMarginManager) {
+    itgMarginManager = previouslyDefinedITGMarginManager;
+} else {
+    itgMarginManager = new ITGMarginManager();
+}
+

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using SRS.Models;
 
 namespace SRS.Data
 {
@@ -12,5 +13,6 @@ namespace SRS.Data
             : base(options)
         {
         }
+        public DbSet<SRS.Models.WorkOrder> WorkOrder { get; set; }
     }
 }

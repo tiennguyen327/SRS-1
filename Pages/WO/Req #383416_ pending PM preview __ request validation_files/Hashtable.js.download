@@ -1,0 +1,58 @@
+// This is a hashtable object
+function Hashtable() {
+	// the main array
+	this.elements = new Array();
+	
+	// !!an embedded object declaration!!
+	this.KeyValue = function(k,v)
+		{
+			this.key = k;
+			this.value = v;
+		}
+		
+	// add key-value pairs here
+	// the new KeyValue object will be created through this method
+	this.add = function(key,value)
+		{
+			this.elements[this.elements.length] = new this.KeyValue(key, value);
+		}
+	// this will retrieve key-value objects by index
+	this.getElementAt = function(indx)
+		{
+			return this.elements[indx];
+		}
+    // return number of elements in the hashtable
+    this.getSize = function()
+        {
+            return this.elements.length;
+        }
+	// this will retrieve the FIRST KeyValue object from the hashtable
+	// this can be modified to return an array of ALL KeyValue objects containing
+	// the same key [but this usage is rare]
+	this.getElement = function(name)
+		{
+			for(var i = 0; i < this.elements.length; i++)
+				if(this.elements[i].key == name)
+					return this.elements[i];
+		}
+	// this will return the FIRST value associated with "key"
+	// also may be modified to return ALL values associated with "key"
+	// see getKeys for example
+	this.getValue = function(key)
+		{
+			var n = new Array();
+				for(var i = 0; i < this.elements.length; i++)
+					if(this.elements[i].key == key)
+					return this.elements[i].value;
+		}
+
+	// this will return all keys having a given value
+	this.getKeys = function(value)
+		{
+			var n = new Array();
+			for(var i = 0; i < this.elements.length; i++)
+				if(this.elements[i].value == value)
+					n[n.length] = this.elements[i].key;
+			return n;
+		}
+}

@@ -1,0 +1,60 @@
+//
+// Contains all cookies manipulation routines
+//
+
+/*
+ *  Return the cookie value as a string
+ *  param: name - Cookie name
+ */
+function readCookie (name) {
+      var namearg = name + "=";
+      var nlen = namearg.length;
+      var clen = document.cookie.length;
+      var i = 0;
+      while (i < clen) {
+        var j = i + nlen;
+        if (document.cookie.substring(i, j) == namearg) {
+           var endpos = document.cookie.indexOf (";", j);
+           if (endpos == -1) endpos = document.cookie.length;
+		   return unescape(document.cookie.substring(j, endpos));
+	    }
+        i = document.cookie.indexOf(" ", i) + 1;
+        if (i == 0){
+		   break;
+		}
+      }
+      return null;
+}
+
+/*
+ * Write cookies
+ * param: name - name of a cookie
+ * param: value - cookie value
+ * param: path - the path to store cookie
+ * param: isNonPersitent - Indicate whether or not to store cookies on your machine or just memory
+ */
+function writeCookie (name, value, path, isNonPersitent, noescape) {
+      if(isNonPersitent){
+          document.cookie = name + "=" + escape (value) + ((path) ? "; path=" + path : "");
+	  }else{
+		  var expdate=new Date();
+          // expire cookie in 10 years by default
+          expdate.setTime(expdate.getTime()+10*365*24*60*60*1000);
+          if(noescape){
+              document.cookie = name + "=" + value + ((path) ? "; path=" + path : "") + "; expires=" + expdate.toGMTString();
+          }else{
+              document.cookie = name + "=" + escape (value) + ((path) ? "; path=" + path : "") + "; expires=" + expdate.toGMTString();
+          }
+	  }
+}
+/*
+ * Delete Cookie
+ * param: name - the cookie name
+ * param: path - the path that cookie was stored.
+ */
+function deleteCookie (name, path) {
+     var expdate = new Date();
+     expdate.setTime (expdate.getTime() - 1);  // Already gone!
+     var cval = readCookie (name);
+     document.cookie = name + "=" + cval + ((path) ? "; path=" + path : "") + "; expires=" + expdate.toGMTString();
+}

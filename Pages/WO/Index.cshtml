@@ -1,0 +1,145 @@
+﻿@page
+@model SRS.Pages.WO.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-page="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].Description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].MostRecentNote)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].RequestStatus)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].WONumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].Workflow)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].WOTitle)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].ClientWorkRequestIDPrefix)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].ClientWorkRequestIDNumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].ZurichSubProjectCode)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].BusinessUnitID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].ClientWorkRequestID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].RelatedWorkOrderRequests)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].GAMSRNumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].GAMSRNumberLink)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].ClientSAPID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].ClientStrategicProgramID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].ClientProgramID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].ClientProjectID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.WorkOrder[0].ClientStrategicProjectID)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.WorkOrder) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Description)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MostRecentNote)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RequestStatus)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.WONumber)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Workflow)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.WOTitle)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientWorkRequestIDPrefix)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientWorkRequestIDNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ZurichSubProjectCode)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BusinessUnitID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientWorkRequestID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RelatedWorkOrderRequests)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.GAMSRNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.GAMSRNumberLink)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientSAPID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientStrategicProgramID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientProgramID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientProjectID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientStrategicProjectID)
+            </td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@item.ID">Edit</a> |
+                <a asp-page="./Details" asp-route-id="@item.ID">Details</a> |
+                <a asp-page="./Delete" asp-route-id="@item.ID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

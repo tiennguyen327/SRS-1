@@ -1,0 +1,1030 @@
+var NUM_NO_GROUP_SEP = "NUM_NO_GROUP_SEP";
+var NUM_FORMAT_CHARS_INTERCHANGED = "NUM_FORMAT_CHARS_INTERCHANGED";
+var NUM_NON_FORMAT_CHARS = "NUM_NON_FORMAT_CHARS";
+var CURRENCY_SYMBOL_LEFT = "LEFT";
+var CURRENCY_SYMBOL_RIGHT = "RIGHT";
+var CURRENCY_FORMATS_SYMBOL = 0;
+var CURRENCY_FORMATS_DECIMAL_PLACES = 1;
+var CURRENCY_FORMATS_SYMBOL_LOCATION = 2;
+
+  // utility function that returns true if the character to check is alpha-numeric
+  // returns false otherwise
+  function isAlphaNumeric(charToCheck) {
+    return ((charToCheck >= '0' && charToCheck <= '9') ||
+            (charToCheck >= 'a' && charToCheck <= 'z') ||
+            (charToCheck >= 'A' && charToCheck <= 'Z'));
+  }
+
+    function CurrencyDM(maximumNumberValue, minimumNumberValue, showZeroFlag, useGroupSepFlag, negativePrefix, negativeSuffix, negativeColor, decimalPlaces, currencyId){
+        this.maximumNumberValue         = maximumNumberValue        ;
+        this.minimumNumberValue         = minimumNumberValue        ;
+        this.showZeroFlag     = showZeroFlag    ;
+        this.useGroupSepFlag  = useGroupSepFlag ;
+        this.negativePrefix   = negativePrefix   ;
+        this.negativeSuffix   = negativeSuffix   ;
+        this.negativeColor    = negativeColor   ;
+        this.decimalPlaces  = decimalPlaces;
+        this.currencyId       = currencyId;
+        this.init = initDataMaskObj;
+        this.init();
+        //Override Functions
+        this.fmtValue = function(inputString){
+            //calls the currency formatter
+            return formatUtils.formatCurrency(inputString,
+                                              this.showZeroFlag,
+                                              this.useGroupSepFlag,
+                                              this.negativePrefix,
+                                              this.negativeSuffix,
+                                              this.decimalPlaces,
+                                              false,
+                                              this.currencyId);
+        }
+        this.parseValue = function(inputString, fieldLabel){
+            var output= formatUtils.parseCurrency(inputString,
+                                                  this.useGroupSepFlag,
+                                                  this.negativePrefix,
+                                                  this.negativeSuffix,
+                                                  false,
+                                                  this.currencyId);
+            return this.checkNumber(output, fieldLabel);
+        }
+        this.isValid = function(code){
+            return !isNaN(code);
+        }
+        this.checkNumber = dm_checkNumber;
+        this.elementHandleInput = element_handleInput;
+        this.toggleColor = dm_toggleColor;
+        this.handleIfFieldEmpty = dm_handleIfFieldEmpty;
+        // note this method is intended to be called by the text field only.  See TextField.prototype.getRawData() for details.
+        this.getRawNumber = function() {
+            this.element.value = trimString(this.element.value);
+            if (this.element.value.length == 0) return "";
+            return formatUtils.parseCurrency(this.element.value, this.dataMaskObject.useGroupSepFlag, this.dataMaskObject.negativePrefix, this.dataMaskObject.negativeSuffix, false, this.dataMaskObject.currencyId);
+        }
+    }
+
+    function PercentDM(maximumNumberValue, minimumNumberValue, showZeroFlag, useGroupSepFlag, negativePrefix, negativeSuffix, negativeColor, decimalPlaces){
+        this.maximumNumberValue         = maximumNumberValue         ;
+        this.minimumNumberValue         = minimumNumberValue         ;
+        this.showZeroFlag     = showZeroFlag     ;
+        this.useGroupSepFlag  = useGroupSepFlag  ;
+        this.negativePrefix   = negativePrefix   ;
+        this.negativeSuffix   = negativeSuffix   ;
+        this.negativeColor    = negativeColor   ;
+        this.decimalPlaces    = decimalPlaces    ;
+        this.init = initDataMaskObj;
+        this.init();
+        //Override Functions
+        this.fmtValue = function(inputString){
+            return formatUtils.formatPercentage(inputString,
+                                              this.showZeroFlag,
+                                              this.useGroupSepFlag,
+                                              this.negativePrefix,
+                                              this.negativeSuffix,
+                                              this.decimalPlaces,
+                                              false);
+        }
+        this.parseValue = function(inputString, fieldLabel){
+            var output= formatUtils.parsePercentage(inputString,
+                                                  this.useGroupSepFlag,
+                                                  this.negativePrefix,
+                                                  this.negativeSuffix,
+                                                  false);
+            return this.checkNumber(output, fieldLabel);
+        }
+        this.isValid = function(code){
+            return !isNaN(code);
+        }
+        this.checkNumber = dm_checkNumber;
+        this.elementHandleInput = element_handleInput;
+        this.toggleColor = dm_toggleColor;
+        this.handleIfFieldEmpty = dm_handleIfFieldEmpty;
+        this.getRawNumber = function() {
+            this.element.value = trimString(this.element.value);
+            if (this.element.value.length == 0) return "";
+            return formatUtils.parsePercentage(this.element.value, this.useGroupSepFlag, this.negativePrefix, this.negativeSuffix, false);
+        }
+    }
+
+    function NumericDM(maximumNumberValue, minimumNumberValue, showZeroFlag, useGroupSepFlag, negativePrefix, negativeSuffix, negativeColor, decimalPlaces){
+        this.maximumNumberValue         = maximumNumberValue        ;
+        this.minimumNumberValue         = minimumNumberValue        ;
+        this.showZeroFlag     = showZeroFlag    ;
+        this.useGroupSepFlag  = useGroupSepFlag ;
+        this.negativePrefix   = negativePrefix   ;
+        this.negativeSuffix   = negativeSuffix   ;
+        this.negativeColor    = negativeColor   ;
+        this.decimalPlaces    = decimalPlaces   ;
+        this.init = initDataMaskObj;
+        this.init();
+        //Override Functions
+        this.fmtValue = function(inputString){
+            return formatUtils.formatNumber(inputString,
+                                              this.showZeroFlag,
+                                              this.useGroupSepFlag,
+                                              this.negativePrefix,
+                                              this.negativeSuffix,
+                                              this.decimalPlaces,
+                                              false,
+                                              false);
+        }
+        this.parseValue = function(inputString, fieldLabel){
+            var output= formatUtils.parseNumber(inputString,
+                                                  this.useGroupSepFlag,
+                                                  this.negativePrefix,
+                                                  this.negativeSuffix,
+                                                  false);
+            return this.checkNumber(output, fieldLabel);
+        }
+        this.isValid = function(code){
+            return !isNaN(code);
+        }
+        this.checkNumber = dm_checkNumber;
+        this.elementHandleInput = element_handleInput;
+        this.toggleColor = dm_toggleColor;
+        this.handleIfFieldEmpty = dm_handleIfFieldEmpty;
+        this.getRawNumber = function() {
+            this.element.value = trimString(this.element.value);
+            if (this.element.value.length == 0) return "";
+            return formatUtils.parseNumber(this.element.value, this.useGroupSepFlag, this.negativePrefix, this.negativeSuffix, false);
+        }
+    }
+
+    function CustomDM(formatCode, matchRegExp, replaceRegExp){
+        this.formatCode = formatCode;
+        this.matchRegExp = matchRegExp;
+        this.replaceRegExp = replaceRegExp;
+        this.init = initDataMaskObj;
+        this.init();
+        //Override Functions
+        this.fmtValue = function(inputString, fieldLabel){
+            if (inputString == null || inputString == "") {
+                // nothing to format if the string is empty
+                return "";
+            }
+            var outString = this.parseValue(inputString, fieldLabel);
+            if(outString==false){
+                //this only happens when a request rule is incorrectly passing in invalid data
+                return "";
+            }
+            return formatUtils.formatCustom(outString, formatCode);
+        }
+        this.parseValue = function(inputString, fieldLabel){
+            return formatUtils.parseCustom(inputString,
+                                           this.formatCode,
+                                           this.matchRegExp,
+                                           this.replaceRegExp,
+                                           fieldLabel);
+        }
+        this.isValid = function(code){
+            return (code==false?false:true);
+        }
+        this.setValueElement = function(element, code, meaning){
+            element.value = encode(meaning, meaning);
+        }
+        this.getRawNumber = function() {
+            return this.element.value;
+        }
+    }
+
+    function PhoneDM(formatCode, maxDigit, minDigit){
+        this.formatCode = formatCode;
+        this.maxDigit  = maxDigit ;
+        this.minDigit  = minDigit ;
+        this.init = initDataMaskObj;
+        this.init();
+        //Override Functions
+        this.fmtValue = function(inputString, fieldLabel){
+            var outString = this.parseValue(inputString, fieldLabel);
+            if(outString==false){
+                //this only happens when a request rule is incorrectly passing in invalid data
+                return "";
+            }
+            return formatUtils.formatPhone(outString,
+                                           this.formatCode,
+                                           this.maxDigit,
+                                           this.minDigit);
+        }
+        this.parseValue = function(inputString, fieldLabel){
+            return formatUtils.parsePhone(inputString,
+                                          this.maxDigit,
+                                          this.minDigit,
+                                          fieldLabel);
+        }
+        this.setValueElement = function(element, code, meaning){
+            element.value = encode(meaning, meaning);
+        }
+        this.getRawNumber = function() {
+            return this.element.value;
+        }
+        this.isValid = function(code){
+            if(code==false){
+                return false;
+            }
+            return true;
+        }
+    }
+
+    function AlphaNumDM(maxLength){
+        this.maxLength = maxLength;
+        this.init = initDataMaskObj;
+        this.init();
+        //Override Functions
+        this.fmtValue = function(inputString){
+            return inputString;
+        }
+        this.parseValue = function(inputString){
+            return inputString;
+        }
+        this.getRawNumber = function() {
+            return this.element.value;
+        }
+        // This causes the visible value to be set on the text field.
+        this.showVisible = true;
+    }
+
+    function AlphaUpperDM(maxLength) {
+        this.maxLength = maxLength;
+        this.init = initDataMaskObj;
+        this.init();
+        //Override Functions
+        this.fmtValue = function(inputString){
+            return inputString.toUpperCase();
+        }
+        this.parseValue = function(inputString){
+            return inputString;
+        }
+        this.getRawNumber = function() {
+            return this.element.value;
+        }
+        this.elementHandleInput = function(evt) {
+            if (evt==null) {
+                evt = event;
+            }
+            // Sadly this only works for IE like other elementHandleInput.
+            // fmtValue would make the field upper case for Netscape when we tab out.
+            if (document.all) {
+                var c = event.keyCode;
+                var C = String.fromCharCode(c).toUpperCase().charCodeAt();
+                event.keyCode = C;
+            }
+
+            return true;
+        }
+        // This causes the visible value to be set on the text field.
+        this.showVisible = true;
+        this.setValueElement = function(element, code, meaning){
+            element.value = encode(meaning.toUpperCase(), meaning.toUpperCase());
+        }
+    }
+
+    function initDataMaskObj(){
+        this.fmtValue = function(inputString){
+            return inputString;
+        }
+        this.parseValue = function(inputString){
+            return inputString;
+        }
+        this.isValid = function(){
+            return true;
+        }
+        // By default format using the hidden value
+        this.showVisible = false;
+        this.setValueElement = dm_numbers_setValueElement;
+        this.handleIfFieldEmpty = function(){}
+        this.tfSetValue = tf_setValue;
+        this.tfFmtValue = tf_fmtValue;
+        this.validate = tf_validate;
+        this.elementHandleInput = function(){}
+        this.getErrorMsg = function(){}
+        this.toggleColor = function(){}
+        this.getRawNumber = function() {
+            return this.element.value;
+        }
+    }
+
+    //generic functions
+    // functions that starts with:
+    // tf - needs to be executed in the context of a textfield javascript object
+    // dm - needs to be executed in the context of a data mask object
+    // element - needs to be executed in the context of a DIM element object.
+    function tf_fmtValue(codeString) {
+        visibleValue = decode(codeString, true);
+        if(visibleValue == null)
+        {
+            return this.emptyString;
+        }
+        else
+        {
+            return this.dataMaskObject.fmtValue(visibleValue);
+        }
+    }
+
+    // Set the value for the field.  This function is called when a rule wants to
+    // set its value, so if we'll validate the value.  If the field is hidden,
+    // (so the user can't change the value), we don't set the value if an error
+    // occur on validation
+    function tf_setValue(codeString, noCascade) {
+        var value = decode(codeString, false);
+        var visibleValue = null;
+        // For Alpha numeric masks we need to show the visible value
+        // in the text field so we decode for the visible value.
+        if ( this.dataMaskObject.showVisible != undef &&
+             this.dataMaskObject.showVisible ) {
+            visibleValue = decode(codeString, true);
+        } else {
+            visibleValue = value;
+        }
+        this.dataMaskObject.toggleColor(this.divObj!=null?this.divObj:this.element, value);
+        this.element.value = this.dataMaskObject.fmtValue(visibleValue, this.clLabel);
+
+        // set the valueElement with code and formatted meaning
+        this.dataMaskObject.setValueElement(this.valueElement, value, this.element.value);
+        if( noCascade == undef || noCascade ) {
+            this.element.cachedValue = this.element.value;
+        }
+        // alert("setvalue :" + this.name + " = " + this.valueElement.value);
+
+        // reset isValidated to force validation if the value is not null.
+        // validate the field in case we need to tell the user a rule causes a problem,
+        // but if we reach here, the field must be editable (otherwise it'll be a
+        // driven field), so we just leave the value to be set to the field anyway.
+        if (value != null) {
+            this.isValidated = false;
+            if (RuleUtil && RuleUtil.isPendingFlag && value =='') {
+                return this.validate(false, true); // don't show required warning when set by a rule
+            } else if (value == ''){
+                return true;      
+            } else {
+                return this.validate(false);
+            }
+        }
+    }
+
+
+    function dm_numbers_setValueElement(element, code, meaning){
+        element.value = encode(code, meaning);
+    }
+    function dm_toggleColor(obj, value){
+       //obj could be an element or could be a div element in case the unupdatable textfield(a driven field)
+        if (obj != null && obj.style != null && value!=null) {
+                var num = parseFloat(value);
+                if (!isNaN(num) && num < 0 && this.negativeColor == '6') {
+                    // 6 is color red in java GUIConstants and it's also part of the negative code.
+                    obj.style.color = 'red';
+                } else {
+                    obj.style.color = 'black';
+                }
+        }
+    }
+    function dm_handleIfFieldEmpty(element, divObj){
+        if(element.value == '' && this.showZeroFlag){
+            // valueElement is set before calling this function because
+            // we have no access to the valueElement here.
+            var meaning = this.fmtValue("");
+            element.value = meaning;
+            this.toggleColor(divObj!=null?divObj:element, '0');
+        }
+    }
+    function dm_checkNumber (num, fieldLabel){
+        if (num == NUM_NO_GROUP_SEP)
+        {
+            if(showAlert) alert(formatMessage(containsGroupSeparator, fieldLabel));
+            return "false";
+        }
+        if((num == NUM_NON_FORMAT_CHARS || num == NUM_FORMAT_CHARS_INTERCHANGED) &&
+            this.decimalPlaces == 0) {
+            if(showAlert) alert(formatMessage(noDecimalNumberMessage, fieldLabel));
+            return "false";
+        }
+        if(num == NUM_NON_FORMAT_CHARS) {
+           if(showAlert) alert(formatMessage(unrecognizedChar, fieldLabel));
+           return "false";
+        }
+        if(num == NUM_FORMAT_CHARS_INTERCHANGED) {
+            if(showAlert) alert(formatMessage(formatCharsInterchanged, fieldLabel));
+            return "false";
+        }
+        if(isNaN(num) == true) {
+            if(showAlert) alert(formatMessage(numericInvalidCharsMessage, fieldLabel));
+            return "false";
+        }
+
+        if(this.minimumNumberValue != null && this.minimumNumberValue.length != 0) {
+            if(num < this.minimumNumberValue){
+               if(showAlert) {
+                   // allow number to be displayed in fixed notation rather than precision notation
+                   var numToDisplay = '';
+                   var decimalsToDisplay = 0;
+                   if (this.decimalPlaces != null && this.decimalPlaces != undefined && this.decimalPlaces >= 0)
+                     decimalsToDisplay = this.decimalPlaces;
+                   numToDisplay = new Number(this.minimumNumberValue).toFixed(decimalsToDisplay);
+
+                   alert(formatMessage(belowMinimum, numToDisplay, fieldLabel));
+               }
+               return "false";
+            }
+        }
+
+        if(this.maximumNumberValue != null && this.maximumNumberValue.length != 0) {
+            if(num > this.maximumNumberValue){
+                if(showAlert)
+                    alert(formatMessage(aboveMaximum, this.maximumNumberValue, fieldLabel));
+                return "false";
+            }
+        }
+        if (this.decimalPlaces <= 0) {
+            // this value should not be a decimal number
+            //if (this.element.value.indexOf('.') > -1) {
+            // In this case we use "." since it's an internal value and not "userDecimalSep"
+            if (num.indexOf(".") > -1) {
+                if(showAlert) alert(formatMessage(noDecimalNumberMessage, fieldLabel));
+                return "false";
+            }
+        }
+        else {
+            // In this case we use "." since it's an internal value and not "userDecimalSep"
+            var index = num.indexOf(".");
+            // if there is a decimal point then validate the no of decimal digits
+            if (index > -1) {
+                var numDecimalDigits = num.length - 1 - index;
+                if (numDecimalDigits > this.decimalPlaces) {
+                    if(showAlert) alert(formatMessage(decimalDigitsExceededMessage, fieldLabel, this.decimalPlaces));
+                    return "false";
+                }
+                else if (numDecimalDigits == 0) {
+                    // remove the trailing decimal point
+                    return num.substring(0, index);
+                }
+            }
+        }
+        return num;
+    }
+    function tf_validate(forceCheck, hideRequiredAlert) {
+
+        if (this.isEnabled == false) {
+            // the component is not enabled, there's no need for validation, just return true
+            return true;
+        }
+        var fieldValue;
+        if (this.element.type == 'hidden') {
+            fieldValue = decode(this.valueElement.value, true);
+        } else {
+            this.element.value = trimString(this.element.value);
+            fieldValue = this.element.value;
+        }
+
+        // error if required and trimmed value matches empty value
+        if(checkRequired && (this.required || (forceCheck != null && forceCheck)) &&
+           (fieldValue==this.emptyString || fieldValue=="")) {
+            if (!hideRequiredAlert) {
+                requiredAlert(this.clLabel);
+            }
+            return false;
+        }
+        // if the field is not validated, and the field does have some value, validate it
+        if(fieldValue != null && fieldValue.length != 0){
+            var code;
+            code = this.dataMaskObject.parseValue(fieldValue, this.clLabel);
+            if(!this.dataMaskObject.isValid(code)){
+                return false;
+            }
+            var meaning = this.dataMaskObject.fmtValue(code);
+
+            // handle blankable text fields
+            if (this.isBlankable && meaning.toUpperCase() == BLANK_FIELD_TEXT.toUpperCase()) {
+              code = BLANK_VALUE_CODE_STRING;
+            }
+
+            this.dataMaskObject.setValueElement(this.valueElement, code, meaning);
+            this.element.value = meaning;
+        }
+        this.dataMaskObject.toggleColor(this.divObj!=null?this.divObj:this.element, code);
+        return true;
+    }
+    function element_handleInput(evt){
+        if(evt==null){
+            evt = event;
+        }
+        // userDecimalSep variable is generated by the FormatWriter.java
+        // this is located after the form tag of every page.
+        var useDotAsDecSep = ("." == userDecimalSep);
+        var allowChar = numberInputHandler.validateNumber( evt, this, useDotAsDecSep);
+        //if(document.all){
+        return allowChar;
+        //}else{
+        //    var value = this.value;
+        //    if(!allowChar){
+        //        this.value = value.substr(0, value.length-1);
+        //    }
+        //}
+    }
+
+    function NumberInputHandler(){
+        var COMMA_KEY_CODE = 44;
+        var MINUS_KEY_CODE = 45;
+        var PERIOD_KEY_CODE = 46;
+        var ZERO_KEY_CODE = 48;
+        var NINE_KEY_CODE = 57;
+
+        this.validateNumber = function ( eventObj, obj , useDotAsDecSep ) {
+            var keyCode = this.getKeyCode(eventObj);
+            //alert ("Key Code "+keyCode);
+        	var str=obj.value;
+            var inThere, decSep, decSepKCode;
+
+            if(useDotAsDecSep){
+                inThere = str.match(/(\.)(\d)(\d*)/gi);
+                decSep = ".";
+                decSepKCode = PERIOD_KEY_CODE;
+            }else{
+                inThere = str.match(/(\,)(\d)(\d*)/gi);
+                decSep = ",";
+                decSepKCode = COMMA_KEY_CODE;
+            }
+
+            if (keyCode==decSepKCode) {
+        	   if (inThere) {
+        	        return false;
+        	   }
+        	   // Check for multiple occurances of '.'
+        	   // If a decimal separator is found then we donot accept any more decimal separators.
+        	   if (str.indexOf(decSep) >= 0){
+        			return false;
+        	   }
+        	}
+
+        	inThere = str.match(/(^(\-))(\d*)/gi);
+        	if (keyCode==MINUS_KEY_CODE) {
+        	    if (inThere) {
+        	        //alert("Match "+keyCode);
+        	        return false;
+        	    }
+        	    if (str != '' && str.indexOf('-') != -1 && str.charAt(0) != '-' ) {
+        	        return false;
+        	    }
+
+        	}
+        	// If Number or '-' or '.'  then accept input.
+        	if (this.validateKeyStroke( keyCode , useDotAsDecSep) ) {
+        	    return true;
+        	}
+        	return false;
+        }
+        this.getKeyCode = function ( eventObj ) {
+            var keyCode;
+        	// Check For Browser Type
+        	if (document.all) {
+        		keyCode=eventObj.keyCode;
+        	} else {
+        		keyCode=eventObj.which;
+        	}
+        	return keyCode;
+        }
+        this.validateKeyStroke = function ( keyCode , useDotAsDecSep ) {
+            if(useDotAsDecSep){
+                decSep = PERIOD_KEY_CODE;
+            }else{
+                decSep = COMMA_KEY_CODE;
+            }
+            if ( (keyCode<ZERO_KEY_CODE || keyCode >NINE_KEY_CODE) &&
+                    (keyCode != decSep) &&
+                    (keyCode != MINUS_KEY_CODE) &&
+                    (keyCode != 8) && (keyCode != 0)) {
+        		return false;
+        	}
+        	return true;
+        }
+    }
+    var numberInputHandler = new NumberInputHandler();
+
+// WARNING: The functions in this object uses extensively the symbols writing by FormatWriter.java.  As a result,
+// these methods should be called only at the ending part of the formTag, or you will get undefined variables
+// everywhere.
+function FormatUtils() {
+    function addNegativePrefix(number, numberString, negPrefix, negSuffix) {
+        if (number < 0) {
+            return negPrefix + numberString + negSuffix;
+        }
+        return numberString;
+    }
+
+    // useServerRegionalSettings should be false unless you want it to format with server symbols.
+    // Be careful not to use "abs" or similar functions on the number string as this will round up the number
+    function formatUtil_formatNumberHelper(number, displayZero, useGrpSep, negPrefix, negSuffix, decimalDigits, enforceDecimal, useServerRegionalSettings) {
+
+        var decimalSep = userDecimalSep;
+        var digitGroupSep = userDigitGroupSep;
+        var digitsInGroup = userDigitsInGroup;
+        if (useServerRegionalSettings) {
+            decimalSep = serverDecimalSep;
+            digitGroupSep = serverDigitGroupSep;
+            digitsInGroup = serverDigitsInGroup;
+        }
+
+        // handle negative prefix later, just think of the number as a positive number right now
+        var num = number.toString();
+        if (num.length > 0 && num.substring(0,1) == '-') {
+            num = num.substring(1);
+        }
+
+        if (!number || !num || num.length == 0) {
+            if (displayZero) {
+                return "0";
+            } else {
+                return "";
+            }
+        }
+        // check if we should use group separator
+        var index = num.indexOf(".");
+        var decimalString = "";
+        var newDecimalString = "";
+        var intString = num;
+
+        if (index != -1) {
+            decimalString = num.substring(index+1);
+            intString = num.substring(0, index);
+        }
+
+        if (useGrpSep) {
+            if(intString.length != "" || intString.length != 0 ){
+                num = formatInt(intString, digitGroupSep, digitsInGroup);
+            }
+            else {
+                num = "0";
+            }
+        } else {
+            num = intString;
+        }
+
+        if(decimalDigits > 0) {
+            var min = decimalDigits;
+            if( decimalString.length < min ) {
+                min = decimalString.length;
+            }
+            newDecimalString = decimalString.substring(0,min);
+        }
+        if( enforceDecimal ) {
+            while( newDecimalString.length < decimalDigits ) {
+                newDecimalString += "0";
+            }
+        }
+
+        if (newDecimalString.length > 0) {
+            num = num + decimalSep + newDecimalString;
+        }
+
+        return num;
+    }
+
+    // takes in a pure number and format it according to the attributes that is being passed in
+    function formatUtil_formatNumber(number, displayZero, useGrpSep, negPrefix, negSuffix, decimalDigits, useServerRegionalSettings, enforceDecimal) {
+        var numberString = formatUtil_formatNumberHelper(number, displayZero, useGrpSep, negPrefix, negSuffix, decimalDigits, enforceDecimal, useServerRegionalSettings);
+        return addNegativePrefix(number, numberString, negPrefix, negSuffix);
+    }
+
+    function formatUtil_formatCurrency(number, displayZero, useGrpSep, negPrefix, negSuffix, decimalDigits, useServerRegionalSettings, currencyId) {
+        var numberString = formatUtil_formatNumberHelper(number, displayZero, useGrpSep, negPrefix, negSuffix, decimalDigits, true, useServerRegionalSettings);
+        var currencySymbolString = '';
+        if (currencyId == null || currencyId == undefined) {
+          currencyId = serverBaseCurrencyId;
+        }
+        if (numberString.length != 0) {
+            currencySymbolString = CurrencyFormats[currencyId][CURRENCY_FORMATS_SYMBOL];
+            if (CurrencyFormats[currencyId][CURRENCY_FORMATS_SYMBOL_LOCATION] == CURRENCY_SYMBOL_LEFT) {
+
+              // Request #140874 - inserts a space between currency symbol and currency value
+              // if last character of currency symbol is alpha-numeric
+              if (currencySymbolString.length > 0 && isAlphaNumeric(currencySymbolString.charAt(currencySymbolString.length-1)))
+                currencySymbolString += ' ';
+
+              numberString = currencySymbolString + numberString;
+            } else {
+              // Request #140874 - inserts a space between currency symbol and currency value
+              // if first character of currency symbol is alpha-numeric
+              if (currencySymbolString.length > 0 && isAlphaNumeric(currencySymbolString.charAt(0)))
+                currencySymbolString += ' ';
+
+              numberString = numberString + currencySymbolString;
+            }
+            return addNegativePrefix(number, numberString, negPrefix, negSuffix);
+        } else {
+            return '';
+        }
+    }
+
+    function formatUtil_formatPercentage(number, displayZero, useGrpSep, negPrefix, negSuffix, decimalDigits, useServerRegionalSettings) {
+        var numberString = formatUtil_formatNumberHelper(number, displayZero, useGrpSep, negPrefix, negSuffix, decimalDigits, false, useServerRegionalSettings);
+
+        if (numberString.length != 0) {
+            numberString += userPercentChar;
+            return addNegativePrefix(number, numberString, negPrefix, negSuffix);
+        } else {
+            return '';
+        }
+    }
+
+    function formatUtil_formatPhone(phoneString, formatString, maxDigit, minDigit) {
+        if (phoneString == null || phoneString == '') { return ''; }
+
+        var resultString = "";
+        // find number of digit in the formatString
+        var formatDigits = 0;
+        for (i = 0; i < formatString.length; i++) {
+            if (formatString.charAt(i) == 'D') {
+                formatDigits++;
+            }
+        }
+        var phoneDigits = phoneString.length;
+        var difference;
+        var indexBegin;
+        var char1;
+        if (phoneDigits < formatDigits) {
+            // if the number of digits in phoneString are less than that of format string,
+            // format from right to left
+            var numUnclosedParen = 0;
+            difference = formatDigits - phoneDigits;
+            // skip the difference
+            for (i = 0; i < formatString.length && difference > 0; i++) {
+                switch(formatString.charAt(i)) {
+                case 'D':
+                    difference--;
+                    break;
+                case '(':
+                    numUnclosedParen++;
+                    break;
+                case ')':
+                    numUnclosedParen--;
+                    break;
+                default:
+                    break;
+                }
+            }
+            indexBegin = i;
+            for (i = 0; i < numUnclosedParen; i++) {
+                resultString += '(';
+            }
+            var phoneIndex = 0;
+            for (i = indexBegin; i < formatString.length; i++) {
+                char1 = formatString.charAt(i);
+                if (char1 == 'D') {
+                    resultString += phoneString.charAt(phoneIndex++);
+                } else {
+                    resultString += char1;
+                }
+            }
+        } else {
+            difference = phoneDigits - formatDigits;
+            // find the first digit in format string and start formatting
+            indexBegin = formatString.indexOf("D");
+            if (indexBegin != -1) {
+                resultString += formatString.substring(0, indexBegin);
+                // put the extra digits in the left most group of digits
+                resultString += phoneString.substring(0, difference);
+            }
+            var phoneIndex = difference;
+            for (i = indexBegin; i < formatString.length; i++) {
+                char1 = formatString.charAt(i);
+                if (char1 == 'D') {
+                    resultString += phoneString.charAt(phoneIndex++);
+                } else {
+                    resultString += char1;
+                }
+            }
+        }
+
+        return resultString;
+    }
+
+    function formatUtil_parseNumber(numString, useGrpSeparator, negPrefix, negSuffix, useServerRegionalSettings) {
+        var decimalSep = userDecimalSep;
+        var digitGroupSep = userDigitGroupSep;
+        var digitsInGroup = userDigitsInGroup;;
+        if (useServerRegionalSettings) {
+            decimalSep = serverDecimalSep;
+            digitGroupSep = serverDigitGroupSep;
+            digitsInGroup = serverDigitsInGroup;
+        }
+
+        if(!numString || numString.length == 0)
+            return "";
+
+        if(numString.indexOf(digitGroupSep) != -1 && !useGrpSeparator) {
+            return NUM_NO_GROUP_SEP;
+        }
+
+        if(numString.indexOf(digitGroupSep) != -1 &&
+           numString.indexOf(decimalSep) != -1 &&
+           (numString.indexOf(digitGroupSep) > numString.indexOf(decimalSep))) {
+            return NUM_FORMAT_CHARS_INTERCHANGED;
+        }
+        var num = "";
+        var nonFormatChars = '';
+
+        // remove prefix if necessary
+        if (negPrefix != "-" && numString.indexOf(negPrefix) == 0 && numString.indexOf(negSuffix) == numString.length-1) {
+            numString = "-" + numString.substring(negPrefix.length, numString.length-negSuffix.length);
+        }
+
+        //remove the digit group separators if they are present
+        for( var i = 0; i < numString.length; i++) {
+            //show error if the entered contains characters other than
+            //digits, the user's decimal or digit group separator characters
+            if(isNaN(numString.charAt(i))&& (numString.charAt(i) != digitGroupSep &&
+                                             numString.charAt(i) != decimalSep)&& numString.charAt(i) != '-') {
+                nonFormatChars += numString.charAt(i)+',';
+            }
+            if(numString.charAt(i) != digitGroupSep) {
+                num = num + numString.charAt(i);
+            }
+        }
+        if(nonFormatChars != ''){
+            return NUM_NON_FORMAT_CHARS;
+        }
+
+        //replace the decimal separator with '.'
+        var i = num.indexOf(decimalSep);
+        if( i > -1 ) {
+            var intPart = num.substring(0, i);
+            var decPart = num.substring(i+1, num.length);
+            num = intPart + "." + decPart;
+        }
+        return num;
+    }
+
+    function formatUtil_parseCurrency(numString, useGrpSeparator, negPrefix, negSuffix, useServerRegionalSettings, currencyId) {
+        if (!numString || numString.length == 0) {
+            return "";
+        }
+
+        // get rid of currency symbol
+        if (currencyId == null || currencyId == undefined) {
+          currencyId = serverBaseCurrencyId;
+        }
+        var currencyStringToFind = CurrencyFormats[currencyId][CURRENCY_FORMATS_SYMBOL];
+
+        // accomodate for spaces between alpha-numeric currency symbols and currency values
+        if (CurrencyFormats[currencyId][CURRENCY_FORMATS_SYMBOL_LOCATION] == CURRENCY_SYMBOL_LEFT) {
+          if (currencyStringToFind.length > 0 && isAlphaNumeric(currencyStringToFind.charAt(currencyStringToFind.length-1)))
+            currencyStringToFind = currencyStringToFind + ' ';
+        } else {
+          if (currencyStringToFind.length > 0 && isAlphaNumeric(currencyStringToFind.charAt(0)))
+            currencyStringToFind = ' ' + currencyStringToFind;
+        }
+
+        var indexOfCurrencySymbol = numString.indexOf(currencyStringToFind);
+        if (indexOfCurrencySymbol >= 0) {
+          numString = numString.substring(0, indexOfCurrencySymbol) + numString.substring(indexOfCurrencySymbol+currencyStringToFind.length, numString.length);
+        }
+
+        numString = formatUtil_parseNumber(numString, useGrpSeparator, negPrefix, negSuffix, useServerRegionalSettings);
+        return numString;
+    }
+
+    function formatUtil_parsePercentage(numString, useGrpSeparator, negPrefix, negSuffix, useServerRegionalSettings) {
+        if (!numString || numString.length == 0) {
+            return "";
+        }
+
+        // get rid of percentage
+        var index = numString.length-1;
+        if (numString.charAt(numString.length-1) == ')') {
+            index = index-1;
+        }
+        if (numString.charAt(index) == userPercentChar) {
+            numString = numString.substring(0, index) + numString.substring(index+1);
+        }
+        numString = formatUtil_parseNumber(numString, useGrpSeparator, negPrefix, negSuffix, useServerRegionalSettings);
+
+        return numString;
+    }
+    function formatUtil_parseCustom(customString, formatString, matchRegExp, replaceRegExp, fieldLabel) {
+        var outString = customString.replace(new RegExp(replaceRegExp,"g"),"");
+        if(!outString.match(new RegExp(matchRegExp,"gi"))){
+            if(showAlert) alert(formatMessage(invalidCustomDMValue, fieldLabel, formatString.replace(/\\\\/gi,"\\\\"), customString));
+            //alert(formatMessage(invalidCustomDMValue, fieldLabel, formatString.replace(/\\\\/gi,"\\\\"), customString) +
+            //      "\nformatUtil_parseCustom:"+ fieldLabel +
+            //      "\ncustomString:"+ customString +
+            //      "\nformatString:"+ formatString +
+            //      "\nmatchRegExp:"+ matchRegExp +
+            //      "\nreplaceRegExp:"+ replaceRegExp +
+            //      "");
+            return false;
+        }
+        return outString;
+    }
+
+    function formatUtil_parsePhone(phoneString, maxDigit, minDigit, fieldLabel) {
+        if (phoneString == null || phoneString.length == 0 || phoneString == false) {
+            // there is nothing to parse
+            return '';
+        }
+
+        var outString = "";
+        if(!phoneString.match(/^[0-9|\#|\*|\(|\)|\.|\ |\+|\-]*$/g)){
+            outString = phoneString.replace(/[0-9|\#|\*|\(|\)|\.|\ |\+|\-]/g,"");
+            if(!confirm(formatMessage(invalidPhoneCharacters, fieldLabel, outString))){
+                return false;
+            }
+        }
+
+        outString = phoneString.replace(/[^0-9|\#|\*]/g,"");
+
+        if(outString.length > maxDigit){
+            if(showAlert) alert(formatMessage(aboveMaxPhoneLength, fieldLabel, maxDigit));
+            return false;
+        }else if(outString.length < minDigit){
+            if(showAlert) alert(formatMessage(belowMinPhoneLength, fieldLabel, minDigit));
+            return false;
+        }
+
+        return outString;
+    }
+    /**
+     * formats an integer with correct digit grouping and
+     * digit group char
+     */
+    function formatInt(intString, digitGroupSep, digitsInGroup) {
+        if(intString.length <= digitsInGroup){
+            return intString;
+        }
+        else {
+            var strLen = intString.length;
+            var numNotInGroup = strLen % digitsInGroup;
+            var numDGChars = (strLen - numNotInGroup) / digitsInGroup;
+            if(numNotInGroup == 0) {
+                numDGChars -= 1;
+            }
+            for(var i = 1; i <= numDGChars; i++) {
+                if(numNotInGroup == 0) {
+                    index = (numDGChars-(i-1))*digitsInGroup;
+                }else {
+                    index = numNotInGroup+((numDGChars-i)*digitsInGroup);
+                }
+                intString = intString.substring(0,index)+digitGroupSep+intString.substring(index);
+
+            }
+            return intString;
+        }
+    }
+
+    function formatUtil_formatCustom(parseData, formatCode) {
+        // if the value is empty, we don't need to format.
+        if (parseData == '') { return ''; }
+
+        var resultString = '';
+        var formatCodeIndex = 0;
+        var parseDataIndex = 0;
+        var c;
+        var c2;
+        for (formatCodeIndex = 0; formatCodeIndex < formatCode.length; formatCodeIndex++) {
+            c = formatCode.charAt(formatCodeIndex);
+            if (parseDataIndex < formatCode.length) {
+                c2 = parseData.charAt(parseDataIndex);
+            }
+            switch(c) {
+            case 'D':
+                if (c2.match(/[0-9]/g)) {
+                    resultString = resultString + c2;
+                    parseDataIndex++;
+                } else {
+                    resultString = resultString + c;
+                }
+                break;
+            case 'A':
+                resultString = resultString + c2;
+                parseDataIndex++;
+                break;
+            case 'L':
+                if (c2.match(/[a-zA-Z]/g)) {
+                    resultString = resultString + c2;
+                    parseDataIndex++;
+                } else {
+                    resultString = resultString + c;
+                }
+                break;
+            default:
+                if (formatCodeIndex != formatCode.length-1) {
+                    resultString = resultString + formatCode.charAt(++formatCodeIndex);
+                }
+                break;
+            }
+        }
+        return resultString;
+    }
+
+    this.formatNumber = formatUtil_formatNumber;
+    this.formatCurrency = formatUtil_formatCurrency;
+    this.formatPercentage = formatUtil_formatPercentage;
+    this.formatPhone = formatUtil_formatPhone;
+    this.formatCustom = formatUtil_formatCustom;
+    this.parseNumber = formatUtil_parseNumber;
+    this.parseCurrency = formatUtil_parseCurrency;
+    this.parsePercentage = formatUtil_parsePercentage;
+    this.parseCustom = formatUtil_parseCustom;
+    this.parsePhone = formatUtil_parsePhone;
+    return this;
+}
+formatUtils = new FormatUtils();
+
+

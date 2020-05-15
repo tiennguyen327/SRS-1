@@ -1,0 +1,137 @@
+﻿@page
+@model SRS.Pages.WO.DeleteModel
+
+@{
+    ViewData["Title"] = "Delete";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<h1>Delete</h1>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>WorkOrder</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.Description)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.Description)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.MostRecentNote)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.MostRecentNote)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.RequestStatus)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.RequestStatus)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.WONumber)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.WONumber)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.Workflow)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.Workflow)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.WOTitle)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.WOTitle)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientWorkRequestIDPrefix)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientWorkRequestIDPrefix)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientWorkRequestIDNumber)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientWorkRequestIDNumber)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ZurichSubProjectCode)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ZurichSubProjectCode)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.BusinessUnitID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.BusinessUnitID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientWorkRequestID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientWorkRequestID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.RelatedWorkOrderRequests)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.RelatedWorkOrderRequests)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.GAMSRNumber)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.GAMSRNumber)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.GAMSRNumberLink)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.GAMSRNumberLink)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientSAPID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientSAPID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientStrategicProgramID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientStrategicProgramID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientProgramID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientProgramID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientProjectID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientProjectID)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.WorkOrder.ClientStrategicProjectID)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.WorkOrder.ClientStrategicProjectID)
+        </dd>
+    </dl>
+    
+    <form method="post">
+        <input type="hidden" asp-for="WorkOrder.ID" />
+        <input type="submit" value="Delete" class="btn btn-danger" /> |
+        <a asp-page="./Index">Back to List</a>
+    </form>
+</div>

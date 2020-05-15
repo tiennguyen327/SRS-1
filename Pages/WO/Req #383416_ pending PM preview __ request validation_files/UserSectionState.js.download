@@ -1,0 +1,209 @@
+var sectionStates = new Object();
+
+var processing = false;
+
+var expandImg = new Image();
+    expandImg.src = "../global/images/FunSecExpand.gif";
+
+var collapseImg = new Image();
+    collapseImg.src = "../global/images/FunSecCollapse.gif";
+
+function setSectionStateCookie(sectionName, expanded) {
+    sectionStates[sectionName] = expanded;
+    writeCookie("USER_SECTION_STATE", encodeCookie(sectionStates), null, true, false);
+}
+
+function encodeCookie(sectionStates) {
+    var cookieValue = sectionStatePageName;
+    if (sectionStatePrimaryKey != null) {
+        cookieValue += "#";
+        cookieValue += sectionStatePrimaryKey;
+    }
+    var section;
+    for (section in sectionStates) {
+        cookieValue += "#";
+        cookieValue += escape(section);
+        cookieValue += "-";
+        if (sectionStates[section]) {
+            cookieValue += "EXPANDED";
+        } else {
+            cookieValue += "COLLAPSED";
+        }
+    }
+
+    return cookieValue;
+}
+
+function expandCollapseSection(sectionName) {
+    if (isSectionExpanded(sectionName)) {
+        collapseSection(sectionName);
+    } else {
+        expandSection(sectionName);
+    }
+}
+
+function collapseSection(sectionName) {
+    if (!isSectionExpanded(sectionName)) {
+        return;
+    }
+
+    var image = document.getElementById('IMAGE_' + sectionName);
+    var separator = document.getElementById('SEPARATOR_' + sectionName);
+    var div = document.getElementById('DIV_' + sectionName);
+    var indicator = document.getElementById('INDICATOR_' + sectionName);
+
+
+    setSectionStateCookie(sectionName, false);
+
+    if (image != null) {
+        image.src = expandImg.src;
+    }
+
+    if (separator != null) {
+        separator.style.display = '';
+    }
+
+    if (div != null) {
+        div.style.display = 'none';
+    } else if (sectionStateMultiElementSections[sectionName] != null) {
+        var sectionElementIds = sectionStateMultiElementSections[sectionName];
+        for (var i = 0; i < sectionElementIds.length; i++) {
+            var sectionElement = document.getElementById(sectionElementIds[i]);
+            if (sectionElement != null) {
+                sectionElement.style.display = 'none';
+            }
+        }
+    }
+
+    if (indicator != null) {
+        indicator.style.visibility = 'visible'; 
+    }
+
+    correctExpandCollapseAllButtons();
+}
+
+function expandSection(sectionName) {
+    if (isSectionExpanded(sectionName)) {
+        return;
+    }
+
+    image = document.getElementById('IMAGE_' + sectionName);
+    separator = document.getElementById('SEPARATOR_' + sectionName);
+    div = document.getElementById('DIV_' + sectionName);
+    indicator = document.getElementById('INDICATOR_' + sectionName);
+    
+    setSectionStateCookie(sectionName, true);
+
+    if (image != null) {
+        image.src = collapseImg.src;  
+    }
+
+    if (separator != null) {
+        separator.style.display = 'none';
+    }
+
+    if (div != null) {
+        div.style.display = '';
+    } else if (sectionStateMultiElementSections[sectionName] != null) {
+        var sectionElementIds = sectionStateMultiElementSections[sectionName];
+        for (var i = 0; i < sectionElementIds.length; i++) {
+            var sectionElement = document.getElementById(sectionElementIds[i]);
+            if (sectionElement != null) {
+                sectionElement.style.display = '';
+            }
+        }
+    }
+
+    if (indicator != null) {
+        indicator.style.visibility = 'hidden'; 
+    }
+    
+    correctExpandCollapseAllButtons();
+}
+
+function expandAllSections() {
+    for (var i = 0; i < sectionStateSectionNames.length; i++) {
+        if (doesSectionExist(sectionStateSectionNames[i])) {
+            expandSection(sectionStateSectionNames[i]);
+        }
+    }
+
+    correctExpandCollapseAllButtons();
+}
+
+function collapseAllSections() {
+    for (var i = 0; i < sectionStateSectionNames.length; i++) {
+        if (doesSectionExist(sectionStateSectionNames[i])) {
+            collapseSection(sectionStateSectionNames[i]);
+        }
+    }
+
+    correctExpandCollapseAllButtons();
+}
+
+function isSectionExpanded(sectionName) {
+    result = false;
+    var imageElement = document.getElementById('IMAGE_' + sectionName);
+    if (imageElement != null) {
+        result = (imageElement.src == collapseImg.src);
+    }
+    return result;
+}
+
+function doesSectionExist(sectionName) {
+    var image = document.getElementById('IMAGE_' + sectionName);
+    return image != null;
+}
+
+function areAllSectionsExpanded() {
+    for (var i = 0; i < sectionStateSectionNames.length; i++) {
+        if (doesSectionExist(sectionStateSectionNames[i]) && !isSectionExpanded(sectionStateSectionNames[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function areAllSectionsCollapsed() {
+    for (var i = 0; i < sectionStateSectionNames.length; i++) {
+        if (doesSectionExist(sectionStateSectionNames[i]) && isSectionExpanded(sectionStateSectionNames[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function correctExpandCollapseAllButtons() {
+    var showAll = document.getElementById('SHOW_ALL');
+    var hideAll = document.getElementById('HIDE_ALL');
+    if (showAll != null) {
+        if (areAllSectionsExpanded()) {
+            //showAll.src = expandAllOffImg.src;
+            showAll.className='funBtn funBtnDis';
+            showAll.innerHTML='<a style=\'width:70\'>Expand All</a>';
+        } else {
+           // showAll.src = expandAllImg.src;
+            showAll.className='funBtn';
+            showAll.innerHTML='<a style=\'width:70\' href="javascript:expandAllSections();">Expand All</a>';
+            
+        }
+    }
+
+    if (hideAll != null) {
+        if (areAllSectionsCollapsed()) {
+            //hideAll.src = collapseAllOffImg.src;
+            hideAll.className='funBtn funBtnDis';
+            hideAll.innerHTML='<a style=\'width:70\'>Collpase All</a>';
+        } else {
+            //hideAll.src = collapseAllImg.src;
+            hideAll.className='funBtn';
+            hideAll.innerHTML='<a href="javascript:collapseAllSections();" style=\'width:70\'>Collapse All</a>';        
+        }
+    }
+    var browserType = whichBrowser();
+    if(browserType == 'MOZILLA5' && window.onresize != null){
+         window.onresize();
+    }
+}

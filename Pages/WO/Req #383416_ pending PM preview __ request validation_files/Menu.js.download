@@ -1,0 +1,600 @@
+/***********************************************************
+ * Must include CookieUtils.js and Windoid.js before calling this script
+ ***********************************************************/
+var COOKIE_PATH = "/itg";
+var KNTA_MENU_STATE = "KNTA_MENU_STATE";
+var KNTA_MENU_STATE_CHANGE = "KNTA_MENU_STATE_CHANGE";
+var KNTA_SHOW_MENU = "KNTA_SHOW_MENU";
+var KNTA_MENU_WIDTH = "KNTA_MENU_WIDTH";
+// This constants must match with the ids defined in header.jsp
+// DOM needs these names to locate the elements
+var MENU_CONTENT         = "NavBarContent";
+var LOGIN_NAME           = "NavBarLoginName";
+var ARROW_IMAGE_NAME     = "arrowImg";
+var NAV_LOGO_NAME        = "navlogo";
+var NAV_BAR_DIVIDER_NAME = "NavBarDivider";
+
+var NAV_LOGO_IMAGE_WIDTH_OFF = 20;
+var NAV_MENU_DEFAULT_WIDTH   = 165;
+
+var ANCHOR_TAG = "A";
+var DISPLAY_NONE = "none";
+var DISPLAY_BLOCK = "block";
+// global variables declaration
+
+var resizingNavBar = false;
+var currentState;
+var isClicked;
+var isClickFromToggled = false;
+var isStateChanged;
+var doneLoading = false;
+var cancelLoading = false;
+
+// IMPORTANT: these constants MUST match the ones defined in DHTMLMenuGenerator
+var NODE_NAME_LEGTH = 6;         // length of "MNNODE"
+var TREENODE       = "MNNODE";  // DHTMLMenuGenerator.NODE_PREFIX
+var TREEBRANCH     = "Branch";
+var TREEIMAGE      = "Image";
+var TREENAME       = "Name";
+var NAVPATH_LEFT_OFFSET = 15;
+var IE_COL_NAVPATH_L_OFFSET = 25;
+var IE_LOGO_L_ZINDEX = -15;
+var LOGO_H_ZINDEX = 25;
+var IE_COLLAPSE_LEFT_OFFSET = 10;
+var LOGO_PADDING = 13; // the width of the second column of the header table
+//---------------------------
+var openImg = new Image();
+    openImg.src = "/itg/web/knta/global/images/open.gif";
+var closedImg = new Image();
+    closedImg.src = "/itg/web/knta/global/images/closed.gif";
+var showMenu;
+// Image for hide and show navigation bar
+var leftImg = new Image();
+leftImg.src = "/itg/web/knta/global/images/NavCollapse.gif";
+var rightImg = new Image();
+rightImg.src = "/itg/web/knta/global/images/NavExpand.gif";
+var collapseLogo = new Image();
+collapseLogo.src = "/itg/web/knta/global/images/NavLogoClosed.gif";
+
+var navLogoImg = new Image();
+navLogoImg.src = "/itg/web/knta/global/images/NavLogo.gif";
+
+var currentSelectedNode = "";
+var mouseLocation = -1;
+
+var browserType;
+/*****************************************
+ *functions to implement resizable table
+ *****************************************/
+function startNavBarResize(event) {
+    if(showMenu == 'N'){
+       return false;
+    }
+    resizingNavBar = true;
+    document.onmousemove   = resizeNavBar;
+    document.onselectstart = disableselect;
+    mouseLocation = -1;
+    if(window.event){
+      mouseLocation = window.event.clientX;
+    }else if(event){
+       mouseLocation = event.clientX;
+    }
+    if(mouseLocation != -1){
+       document.NavDividerShadow.left    = mouseLocation;
+       document.NavDividerShadow.display = DISPLAY_BLOCK;
+       document.NavDividerShadow.height  = document.getElementById('MenuTable').offsetHeight + 50;
+      
+    }
+}
+
+function stopNavBarResize() {
+    if (resizingNavBar) {
+        document.onmousemove   = null;
+		document.onselectstart = null;
+        resizingNavBar = false;
+        document.NavDividerShadow.display = DISPLAY_NONE;
+        if (mouseLocation != -1) {
+         	if(browserType == 'MOZILLA5'){
+	       		document.ContentStyle.left    = mouseLocation;
+	    	}
+	    	if(document.dir == 'ltr') {
+	    	    document.NavBarControl.width      = mouseLocation;
+	    	    document.HeaderControl.width      = mouseLocation;
+                document.NavigationBarLayer.width = mouseLocation;
+			    document.NavPathLayer.left        = mouseLocation + NAVPATH_LEFT_OFFSET;
+			    writeCookie(KNTA_MENU_WIDTH,mouseLocation,COOKIE_PATH);
+	    	} else {
+	    	    var browserWidth = document.body.clientWidth;
+	    	    document.NavBarControl.width      = browserWidth - mouseLocation;
+	    	    document.HeaderControl.width      = browserWidth - mouseLocation;
+                document.NavigationBarLayer.width = browserWidth - mouseLocation;
+			    document.NavPathLayer.left        = browserWidth - (mouseLocation + NAVPATH_LEFT_OFFSET);
+			    writeCookie(KNTA_MENU_WIDTH, browserWidth - mouseLocation, COOKIE_PATH);
+			}
+	    adjustHeaderTable();
+	    adjustMenuLayout();
+        }
+    }
+}
+                                                               
+function resizeNavBar(event) {
+    
+    var horizontalScroll;
+    // Considering whether the user horizontally scrolled
+    if(document.dir == 'ltr')  {
+       horizontalScroll = document.body.scrollLeft;
+    } else {
+       horizontalScroll = 0;
+    }
+
+    if (window.event) {
+        mouseLocation = horizontalScroll +window.event.clientX;
+    } else if (event) {
+        mouseLocation = horizontalScroll + event.clientX;
+    }
+    if(mouseLocation != -1){
+        document.NavDividerShadow.left = mouseLocation;
+    }
+}
+
+// Disable text selection function
+function disableselect(e){
+    return false
+}
+
+/***********************************
+ * obj.style.display = 'block';
+ * obj.style.visibility = 'visible';
+ * functions to maintain menu states
+ ***********************************/
+function setCurrState(setting) {
+    currentState = setting;
+    writeCookie(KNTA_MENU_STATE,setting,COOKIE_PATH);
+}
+
+function getCurrState() {
+    return readCookie(KNTA_MENU_STATE);
+}
+
+function updateCookies(pos){
+    var tempState="";
+    // this may happens when the page hasn't finished loading
+    // and users click to expand/collapse the menu.
+    // -- rarely happens, but it does !
+    if(currentState == null){
+        currentState = getCurrState();
+        if(currentState == null){
+            return;
+        }
+    }
+    // casting String to Integer
+    pos = pos - 0;
+    if(pos >= currentState.length){
+        for( i = currentState.length; i < pos; i++ ){
+	    	currentState += '0'; 
+		}
+		var nodeName = TREENODE + pos + TREEBRANCH;
+		var nodeStyle = document.getElementById(nodeName).style;
+		if(nodeStyle.display==DISPLAY_BLOCK) {
+	    	currentState += '1';
+		} else {
+	    	currentState += '0';
+		}
+    }else{
+        tempState = currentState.substring(0,pos);
+        tempState += (currentState.charAt(pos) == '1') ? '0' : '1';
+		var length = currentState.length;
+		tempState += currentState.substring(pos+1,length);
+		currentState = tempState;
+    }
+    setCurrState(currentState);
+}
+
+function setStateChanged(){
+    writeCookie(KNTA_MENU_STATE_CHANGE,'Y',COOKIE_PATH,true);
+    isStateChanged = 'Y';
+}
+
+// Unfortunately that header is in separate table, we can't really make
+// the sign out button in synch with the footer and content page
+// through CSS or HTML.
+function adjustHeaderTable(){
+    if(browserType == 'MOZILLA5'){ 
+        var w = document.getElementById('FooterTable').offsetWidth + document.HeaderControl.width + LOGO_PADDING;
+        document.getElementById('HeaderTable').style.width = w;
+    }else{
+        var w = document.getElementById('hdrTableContainer').offsetWidth;
+        document.getElementById('HeaderTable').style.width = w;
+    }
+}
+
+/**************************
+ * initialize menu display
+ * isLTR is true if the page is left-to-right text direction
+ **************************/
+ function initializeMenuDisplay(isLTR){
+  	var navPathHeight = document.NavPathTable.offsetHeight;
+ 	// adjusting the Navigation Path layout
+ 	if(browserType == 'MOZILLA5'){ //always has to do a lot for netscape.Sigh...
+		 if(document.Content.offsetTop < navPathHeight){
+		    if(isDashboard != 'true'){
+ 		        document.NavigationBarLayer.top = navPathHeight + 15;
+ 		        document.getElementById('header').style.height = document.getElementById('header').offsetHeight + 15;
+ 		    }else{
+ 		        document.NavigationBarLayer.top = navPathHeight + 2;
+ 		    }
+ 		    document.ContentStyle.top = navPathHeight + 5;
+ 		 }
+ 	}
+	// end of adjusting Navigation Path layout
+    showMenu = readCookie(KNTA_SHOW_MENU);
+    var arrowImage     = document.getElementById(ARROW_IMAGE_NAME);
+    if(showMenu == 'N'){
+        if (isLTR) {
+            arrowImage.src     = rightImg.src;
+            arrowImage.name    = 'navExpand';
+        } else {
+            arrowImage.src     = leftImg.src;
+            arrowImage.name    = 'navCollapse';
+        }
+        //logoImg            = document.getElementById(NAV_LOGO_NAME); 
+        //logoImg.src        = collapseLogo.src;
+        document.getElementById(NAV_BAR_DIVIDER_NAME).className='menubardivideroff';
+        if(browserType != 'MOZILLA5'){
+            document.NavBarControl.width  = IE_COLLAPSE_LEFT_OFFSET;
+            document.HeaderControl.width  = NAV_LOGO_IMAGE_WIDTH_OFF - 8;
+            document.NavPathLayer.left    = IE_COL_NAVPATH_L_OFFSET;
+     	}else{
+            document.HeaderControl.width  = 7;
+            document.NavBarControl.width  = NAV_LOGO_IMAGE_WIDTH_OFF;
+            document.ContentStyle.left    = '0px';
+		}
+		//document.NavLogoImage.zIndex  = LOGO_H_ZINDEX;
+		document.NavigationBarLayer.display = DISPLAY_NONE;
+	
+    }else{
+        if (isLTR) {
+            arrowImage.src = leftImg.src;
+            arrowImage.name = 'navCollapse';
+        } else {
+            arrowImage.src = rightImg.src;
+            arrowImage.name = 'navExpand';
+        }        
+        var previousLoc = readCookie(KNTA_MENU_WIDTH);
+        if ( previousLoc != null) {
+            previousLoc -= 0; // convert to integer
+	    	if(browserType != 'MOZILLA5'){
+                document.NavigationBarLayer.width = previousLoc;
+                //document.NavLogoImage.zIndex =  IE_LOGO_L_ZINDEX;
+            }else{
+ 	       		document.ContentStyle.left   = previousLoc;
+				//document.NavLogoImage.zIndex  = 5;
+	    	}
+	    	document.NavPathLayer.zIndex  = 20;
+	    	document.NavBarControl.width  = previousLoc;
+	    	document.HeaderControl.width  = previousLoc;
+            document.NavPathLayer.left    = previousLoc + NAVPATH_LEFT_OFFSET;
+      	}
+    }
+    adjustHeaderTable();
+  }
+/********************************************************************************
+ * CCS specify whether an element is displayed or not. this function toggles that
+ * property, efectively collapsing/expanding the folder structureTaskStateChangeFrame
+ ******************************************************************************/
+function toggleNodeDisplay(nodeName){
+    var nodeStyle = document.getElementById(nodeName).style;
+    if(nodeStyle.display == DISPLAY_BLOCK) {
+    // hide the branch
+	nodeStyle.display = DISPLAY_NONE;
+    } else {
+    // display the branch
+	nodeStyle.display = DISPLAY_BLOCK;
+    }
+}
+
+/*************************************************************************
+ * swaps the folder icon. it toggles between open and closed folder images
+ *************************************************************************/
+function toggleNode(nodeName, isLTR){
+    var objImg = document.getElementById(nodeName + TREEIMAGE);
+    var nodeStyle = document.getElementById(nodeName + TREEBRANCH).style;
+    if(objImg.src.indexOf('closed.gif') > -1 || objImg.src.indexOf('closed_rtl.gif') > -1) {
+        objImg.src = openImg.src;
+        nodeStyle.display = DISPLAY_BLOCK;
+    } else {
+        objImg.src = closedImg.src;
+		nodeStyle.display = DISPLAY_NONE;
+    }
+}
+
+function expandCollapseAll(isExpandAll, isLTR){
+    if(doneLoading){
+        var tempState = "";
+        for( i = 0; i < currentState.length; i++ ){
+            var nodeId = TREENODE + i ;
+	    var nodeName = nodeId + TREEBRANCH;
+	    var node = document.getElementById(nodeName);
+	    if(node != null){
+	        var objImg = document.getElementById(nodeId + TREEIMAGE);
+	        if(isExpandAll){
+		    objImg.src = openImg.src;
+	            node.style.display = DISPLAY_BLOCK; 
+	            tempState += '1';
+                }else{
+                    objImg.src = closedImg.src;
+                    node.style.display = DISPLAY_NONE;
+                    tempState += '0';
+                }
+	     }
+         }
+         setCurrState(tempState);
+         setStateChanged();
+         adjustMenuLayout();
+     }else{
+        if(!cancelLoading && confirm('Page transfer was interrupted. Do you want to reload?')){
+	   window.location.reload();
+	}else{
+	   cancelLoading = true;
+	}
+    }
+}
+
+/******************
+ * hide/show menu
+ * isLTR is true if the page text direction is left-to-right
+ *****************/
+ function toggleMenuDisplay(isLTR) {
+   var arrowImage = document.getElementById(ARROW_IMAGE_NAME);
+   //var logoImg = document.getElementById(NAV_LOGO_NAME);
+   if(document.NavigationBarLayer.display != DISPLAY_NONE){
+       if (isLTR) {
+           arrowImage.src = rightImg.src;
+           arrowImage.name = 'navExpand';
+       } else {
+           arrowImage.src = leftImg.src;
+           arrowImage.name = 'navCollapse';
+       }
+	   document.getElementById(NAV_BAR_DIVIDER_NAME).className='menubardivideroff';
+       writeCookie(KNTA_SHOW_MENU,'N',COOKIE_PATH);
+       showMenu = 'N';
+       if(browserType != 'MOZILLA5'){
+       	    document.HeaderControl.width  = NAV_LOGO_IMAGE_WIDTH_OFF - 8;
+            document.NavBarControl.width  = IE_COLLAPSE_LEFT_OFFSET;
+	    	document.NavPathLayer.left    = IE_COL_NAVPATH_L_OFFSET;
+       }else{
+            document.HeaderControl.width  = 7;
+ 	    	document.ContentStyle.left    = '0px';
+       }
+	   //document.NavLogoImage.zIndex  = LOGO_H_ZINDEX;
+       document.NavigationBarLayer.display = DISPLAY_NONE;
+       //logoImg.src = collapseLogo.src;
+   }else{
+       if (isLTR) {
+           arrowImage.src = leftImg.src;
+           arrowImage.name = 'navCollapse';
+       } else {
+           arrowImage.src = rightImg.src;
+           arrowImage.name = 'navExpand';
+       }
+	   //logoImg.src = navLogoImg.src;
+       document.getElementById(NAV_BAR_DIVIDER_NAME).className='menubardivideron';
+       writeCookie(KNTA_SHOW_MENU,'Y',COOKIE_PATH);
+       showMenu = 'Y';
+       var previousLoc = readCookie(KNTA_MENU_WIDTH);
+       if ( previousLoc != null) {
+   	   	   previousLoc -= 0; // convert to integer
+       }else{
+           previousLoc = NAV_MENU_DEFAULT_WIDTH;
+       }
+       document.NavPathLayer.left   = previousLoc + NAVPATH_LEFT_OFFSET;
+       document.HeaderControl.width = previousLoc;
+       if(browserType != 'MOZILLA5'){
+           document.NavBarControl.width = previousLoc;
+	   	   //document.NavLogoImage.zIndex = IE_LOGO_L_ZINDEX;
+       }else{
+   	   	   document.ContentStyle.left   = previousLoc;
+           document.ContentStyle.zIndex = '30';	    	
+           //document.NavLogoImage.zIndex = 5;
+       }
+       document.NavigationBarLayer.width = previousLoc;
+       document.NavigationBarLayer.display = DISPLAY_BLOCK;
+       document.NavDividerShadow.zIndex = '500';
+   }
+}
+
+/*************************************************************
+ * we need to:
+ * 1. hide/unhide the contents of the folder
+ * 2. toggle the folder icon (closed folder <--> open folder)
+ * 3. indicate which folder is selected
+ ************************************************************/
+function handleExpandCollapse(nodeName, isLTR) {
+    toggleNode(nodeName, isLTR);
+    updateCookies(nodeName.substr(NODE_NAME_LEGTH,nodeName.length))
+    // keep track of whether or not user ever expand/collapse menu
+    setStateChanged();
+    isClicked = false;
+    if(doneLoading){
+        adjustMenuLayout();
+    }else{
+        if(!cancelLoading && confirm('Page transfer was interrupted. Do you want to reload?')){
+	   window.location.reload();
+	}else{
+	   cancelLoading = true;
+	}
+    }
+}
+/**********************************************
+ * Help to detect whether users click on a URL
+ **********************************************/
+function onClickHandler(evt){
+   evt = (evt) ? evt : ((window.event) ? window.event : "")
+   var elem = (evt.target) ? evt.target : evt.srcElement
+   
+   if (elem.parentNode == null) {
+    isClicked = false;
+   } else {
+       var parentNodeName = elem.parentNode.nodeName;
+       if(elem.nodeName == ANCHOR_TAG || parentNodeName == ANCHOR_TAG){ // if clicking on a URL
+          isClicked = true;
+       }else{
+          isClicked = false;
+       }
+   }
+}
+function onResizeHandler(){
+	adjustHeaderTable();
+	adjustMenuLayout();
+}
+/*******************************************************************************************************
+ * Called when a page unload. Normally this means users click on a URL, Refresh or close browser window
+ *******************************************************************************************************/
+// to capture X close browser window event we need to use the combination of two events:
+// 1. onClick event
+// 2. onUnload event
+// When the users click on X icon, the onClick event will not be triggered since we register onClick inside the
+// page (i.e. document.onClick=onClickHandler). However the onUnload event will be triggered. We need to use
+// the combination of 2 events since onUnload event will also be triggered when a page is refresh or when users
+// click on a URL. We will not be able to capture this 100% but for our purpose it's good enough.
+// Netscape 7.0 does not fire onUnload window.close() gets called
+// or when users click on the 'X' icon of the browser window. This is a known bug.
+
+function onUnloadHandler(){
+   if( !isWindoid() && isStateChanged == 'Y' && !isClicked ){
+       writeCookie(KNTA_MENU_STATE_CHANGE,'N',COOKIE_PATH,true);
+       document.getElementById('hiddenMenuFrame').src = '../global/SaveMenuState.jsp';
+   }
+}
+
+// -------------------------------------------
+// Finds absolute Y position of object on page
+// Written by William Wang 5/16/03
+// -------------------------------------------
+function getAbsoluteY(obj) {
+   var counter = 0;
+   while (obj.offsetParent) {
+      counter += obj.offsetTop;
+      obj = obj.offsetParent;
+   }
+   return counter;
+}
+
+// Adjust menu size when expand/collapse or when menu size and content size
+// is out of synch. This must be called after init()
+function adjustMenuLayout(){
+   // ---------------------------------
+   // Cleaned by William Wang on 5/16/03
+   // Modified by stanley Ye on 4/29/03
+   // GUI enhencement for pushing black strip to the buttom of the page
+   // **********************************
+   // Known issue: in some page, like creat, search, the whole  content layer pan up about 30px
+   //              That issue happens only in NS, and it is not caused by this method
+   //              however, due to that issue, black strip  cannot be pushed to the buttom of the page. -- Fixed 5/16/03
+   // Impacted files: menu.js, IEFooter.jsp, IEHeader.jsp, NSHeader.jsp, NSFooter.jsp
+   // use obj adjustableCellInMenu and FooterControlRow objects in <td> to adjust padding space   
+   // menuHeight including adjustable cell padding space
+
+   // setup id constants
+   var contentControlId = 'FooterControlRow';
+   var menuControlId = 'adjustableCellInMenu';
+   var menuTableId = 'MenuTable';
+   if(browserType=='MOZILLA5'){
+      var contentTableId = 'ContentTable';
+   }else{
+      var contentTableId = 'innerContent';
+   }
+
+   // reset padding cells to 0 to get accurate measurements
+   document.getElementById(contentControlId).style.height = 0;
+   document.getElementById(menuControlId).style.height = 0;
+
+   // height of browser window 
+   var browserHeight = document.body.clientHeight;
+
+   // absolute height of current nav menu
+   var menuHeight = getAbsoluteY(document.getElementById(menuTableId)) + document.getElementById(menuTableId).offsetHeight;
+   
+   // absolute height of content table
+   var contentHeight = getAbsoluteY(document.getElementById(contentTableId)) + document.getElementById(contentTableId).offsetHeight;
+
+   // find max height to sync to
+   var maxHeight = Math.max(browserHeight, Math.max(menuHeight, contentHeight));
+
+   // calculate extra padding in case the content side doesn't have the required minimum of 30 pixels added
+   if (maxHeight - contentHeight < 30)
+      var extraPadding = 30 + (maxHeight - contentHeight);
+   else
+      var extraPadding = 0;
+
+   // sync padding cells to max height
+   document.getElementById(menuControlId).style.height = maxHeight - menuHeight + extraPadding;
+   document.getElementById(contentControlId).style.height = maxHeight - contentHeight + extraPadding;
+
+}
+
+/*************************
+ *  Called by onLoad event
+ *************************/
+function init(isLTR){
+
+   // do not need to run the init method if page is a Windoid.
+   if (isWindoid())
+   	return;
+
+   doneLoading = false;
+   isStateChanged = readCookie(KNTA_MENU_STATE_CHANGE);
+   if(isStateChanged == 'Y'){
+       isClicked = false;
+   }else{
+       isClicked = true;
+   }
+   document.onclick = onClickHandler;
+   if(initMenuState != 'null'){
+       setCurrState(initMenuState);
+   }else{
+       currentState = getCurrState();
+       if(currentState == null){
+           currentState='0';
+       }
+   }
+   document.NavDividerShadow = document.getElementById("navdividershadow").style;
+   document.NavPathLayer = document.getElementById("navpath").style;
+   document.NavigationBarLayer = document.getElementById("navigationbar").style;
+   
+   document.NavBarDivider = document.getElementById("NavBarDivider").style;
+   browserType = whichBrowser();
+   if(browserType == 'MOZILLA5'){
+       document.Content = (document.getElementById('content') != null)? document.getElementById('content'):
+                                                           document.getElementById('contentnotab');
+       document.ContentStyle = document.Content.style;
+       document.NavBarControl = document.getElementById('navigationbar').style;       
+   }else{
+       document.NavBarControl = document.getElementById("NavBarImage").style;
+   }
+   //document.NavLogoImage = document.getElementById("navlogoImage").style;
+   document.MenuTable = document.getElementById("MenuTable");
+   document.ContentTable = document.getElementById("ContentTable");
+   document.NavPathTable = document.getElementById("navpathtable");
+   // adjusting the menu bar divider and content layer height
+   initializeMenuDisplay(isLTR);
+   adjustMenuLayout();
+   doneLoading = true;
+}
+function openWorkbench(smartURLParams) {
+    this.document['WORKBENCH'] = new PopupWorkbench(smartURLParams);
+    this.document['WORKBENCH'].loadPopupWorkbench();
+}
+
+function MenuObj() {
+    this.oldWindowOnresize = window.onresize;
+    window.onresize = function() {
+        if(menuObj.oldWindowOnresize != null && !isWindoid()){
+            menuObj.oldWindowOnresize();
+        }
+        if(!isWindoid()){
+            menuObj.handleResize();
+        }
+    }
+}
+MenuObj.prototype.handleResize = onResizeHandler;

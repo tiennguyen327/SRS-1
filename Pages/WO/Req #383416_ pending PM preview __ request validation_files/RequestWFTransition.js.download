@@ -1,0 +1,132 @@
+var undef;
+function createTD(colspan, width){
+    document.writeln("<td colspan=" + colspan + " style='padding-left:" + width + "'></td>");
+}
+function createHeader(numButtons){
+    var buttonWidth;
+    if(numButtons == 3){
+        buttonWidth = 253;//use to be 257
+    }else if(numButtons == 4){
+        buttonWidth = 189;//use to be 193
+    }else if(numButtons == 5){
+        buttonWidth = 151;//use to be 154
+    }
+    
+    document.writeln("<tr>");
+    createTD(1,0);
+    createTD(1,buttonWidth);
+    createTD(1,0);
+    createTD(2,buttonWidth);
+    createTD(1,0);
+    createTD(2,buttonWidth);
+    if(numButtons == 3){
+        createTD(6,50);
+    }else if(numButtons == 4){
+        createTD(1,0);
+        createTD(2,buttonWidth);
+        createTD(3,50);
+    }else if(numButtons == 5){
+        createTD(1,0);
+        createTD(2,buttonWidth);
+        createTD(1,0);
+        createTD(2,buttonWidth);
+    }
+    //This line will make your request transition section none resizable on window resize.
+    document.writeln("<td width=10000></td>");
+    document.writeln("</tr>");
+}
+
+
+function createLine(stepName){
+    //document.writeln("");
+    document.writeln("<tr><td class='vertical-medium-space' colspan='15'>&nbsp;</td></tr>");
+    document.writeln("<tr><td class='divider-thin' colspan='15'>&nbsp;</td></tr>");
+    document.writeln("<tr><td class='vertical-medium-space' colspan='15'>&nbsp;</td></tr>");
+    document.writeln("<tr>");
+    if(stepName != undef){
+        document.writeln("<td colspan='1'></td>");
+        document.writeln("<td colspan='14' class='bold-text'>" + stepName + "</td>");
+    }else{
+        document.writeln("<td colspan='15'></td>");
+    }
+    document.writeln("</tr>");
+    document.writeln("<tr>");
+    document.writeln("<td colspan='15' height='5'></td>");
+    document.writeln("</tr>");
+    document.writeln("<tr>");
+    document.writeln("<td colspan='15' height='1'></td>");
+    document.writeln("</tr>");
+    document.writeln("<tr>");
+}
+
+function createLineNoExtraHeight(stepName){
+    document.writeln("<tr>");
+    if(stepName != undef){
+        document.writeln("<td colspan='1'></td>");
+        document.writeln("<td colspan='14' class='bold-text'>" + stepName + "</td>");
+    }else{
+        document.writeln("<td colspan='15'></td>");
+    }
+    document.writeln("</tr>");
+    document.writeln("<tr>");
+    document.writeln("<td colspan='15' height='1'></td>");
+    document.writeln("</tr>");
+    document.writeln("<tr>");
+}
+
+function revertDynamicButtonOnClick(formName) {
+    document[formName]['STEP_TRANSACTION_ID'].value = "";
+    document[formName]['WF_EVENT'].value = "";    
+    document[formName]['RESULT_VALUE'].value = "";    
+    document[formName]['VALIDATION_ID'].value = "";    
+    document[formName]['STATUS'].value = "";    
+    document[formName]['STEP_TYPE_CODE'].value = "";    
+    document[formName]['APPROVALS_REQUIRED_CODE'].value = "";    
+    document[formName]['STEP_NAME'].value = "";    
+    document[formName]['WORKFLOW_STEP_ID'].value = "";    
+    document[formName]['WORKFLOW_COMMAND_ID'].value = "";
+    document[formName]['DESTINATION_PAGE'].value = "";
+}
+
+function DynamicButton_onclick(){
+    document[this.form]['STEP_TRANSACTION_ID'].value = this.stepTransactionId;
+    document[this.form]['WF_EVENT'].value = this.wfEvent;    
+    document[this.form]['RESULT_VALUE'].value = this.resultValue;    
+    document[this.form]['VALIDATION_ID'].value = this.validationId;    
+    document[this.form]['STATUS'].value = this.status;    
+    document[this.form]['STEP_TYPE_CODE'].value = this.stepTypeCode;    
+    document[this.form]['APPROVALS_REQUIRED_CODE'].value = this.approvalsRequiredCode;    
+    document[this.form]['STEP_NAME'].value = this.stepName;    
+    document[this.form]['WORKFLOW_STEP_ID'].value = this.workflowStepId;    
+    document[this.form]['WORKFLOW_COMMAND_ID'].value = this.workflowCommandId;
+    document[this.form]['DESTINATION_PAGE'].value = this.destinationPage;
+    return;
+}
+
+function DynamicButton(stepName, 
+                       stepTransactionId, 
+                       wfEvent, 
+                       resultValue, 
+                       validationId, 
+                       stepTypeCode, 
+                       status, 
+                       approvalsRequiredCode,
+                       workflowStepId,
+                       workflowCommandId,
+                       destinationPage,
+                       form){
+    this.stepName = stepName;
+    this.stepTransactionId = stepTransactionId;
+    this.wfEvent = wfEvent;
+    this.resultValue = resultValue;
+    this.validationId = validationId;
+    this.stepTypeCode = stepTypeCode;
+    this.status = status;
+    this.approvalsRequiredCode = approvalsRequiredCode;
+    this.workflowStepId = workflowStepId;
+    this.workflowCommandId = workflowCommandId;
+    this.form = form;
+    this.destinationPage = destinationPage;
+}
+new DynamicButton();
+DynamicButton.prototype.onclick = DynamicButton_onclick;

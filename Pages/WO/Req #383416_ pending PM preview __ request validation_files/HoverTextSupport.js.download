@@ -1,0 +1,187 @@
+var tooltipLayer = 'tooltip';
+// we need to differentiate IE 5+ and Netscape 7
+var HM_IE = (document.all) ? true : false;
+
+// This function shows the 'hoverText' passed in.  
+// 'locator' parameter is used for placement of text.
+// 'x' and 'y' are used for offsetting the text.
+function showHoverText(hoverText, x, y, locator) {
+	
+    var tip = document.getElementById(tooltipLayer);
+    // an optional element that needs to be hidden when the tooltip is visible
+    var locatorFoe = locator + 'HIDE';
+    var locator = document.getElementById(locator);
+
+    if (tip && (!tip.currentTooltipHoverText || hoverText != tip.currentTooltipHoverText)) {
+        var tooltipHtml;
+        tooltipHtml =  '<table cellpadding="0" cellspacing="0" class="tipTable">';
+        tooltipHtml += '<tr><td class="tooltip" align="left" valign="center"><div>';
+        tooltipHtml +=   hoverText;
+        tooltipHtml += '</div></td></tr></table>';
+
+        tip.innerHTML = tooltipHtml;
+        tip.currentTooltipHoverText = hoverText;
+    }
+
+    if (HM_IE) {                
+        if ((locator.offsetLeft + x + tip.clientWidth) > (document.body.clientWidth + document.body.scrollLeft)) { 
+             x = (document.body.clientWidth + document.body.scrollLeft) - (locator.offsetLeft + x + tip.clientWidth);
+             if((locator.offsetLeft + x) < document.body.scrollLeft) {
+                x = document.body.scrollLeft - locator.offsetLeft;
+             }
+        }
+        if ((locator.offsetTop + y + tip.clientHeight) > (document.body.clientHeight + document.body.scrollTop)) {
+             y = -40;             
+        }
+                
+        tip.style.posLeft =  locator.offsetLeft + x + getGrossOffsetLeft(locator);
+        tip.style.posTop = locator.offsetTop + y + getGrossOffsetTop(locator);
+    } else {
+        if ((locator.offsetLeft + x + 50 + tip.offsetWidth) > (window.pageXOffset + window.innerWidth)) { 
+            x = (window.pageXOffset + window.innerWidth) - (locator.offsetLeft + x + 50 + tip.offsetWidth);
+            if((locator.offsetLeft + x) < window.pageXOffset) {
+                x = window.pageXOffset - locator.offsetLeft;
+            }
+        }
+        if ((locator.offsetTop + y + tip.offsetHeight) > (window.pageYOffset + window.innerHeight)) {
+            y = -40;
+        }
+
+        tip.style.left = locator.offsetLeft + x + getGrossOffsetLeft(locator);
+        tip.style.top = locator.offsetTop + y + getGrossOffsetTop(locator);
+    }
+
+    tip.style.visibility = "visible";
+
+    tip.foe = document.getElementById(locatorFoe);
+    if (tip.foe) {
+      tip.foe.style.visibility = 'hidden';
+    }
+}
+
+// Hides the hoverText upon mouse out.
+function hideHoverText() {
+    if (HM_IE) {
+        document.all[tooltipLayer].style.visibility = 'hidden';
+        if (document.all[tooltipLayer].foe) {
+          document.all[tooltipLayer].foe.style.visibility = 'visible';
+        }
+    } else {
+        document.getElementById(tooltipLayer).style.visibility = 'hidden';
+        if (document.getElementById(tooltipLayer).foe) {
+          document.getElementById(tooltipLayer).foe.style.visibility = 'visible';
+        }
+    }
+}
+
+// This function is to calculate the left offset of the element within the page,
+// it is generic enough handle nested layers
+function getGrossOffsetLeft(elem) {
+    var undefined;
+    var offset = 0;
+    while (elem.offsetParent) {
+        elem = elem.offsetParent;
+        offset += elem.offsetLeft;
+        if (elem.tagName == "DIV" && elem.scrollLeft != undefined) {
+            // if this is a scrollable div layer, we need to calculate
+            // how much the user has scrolled and subtract it from the
+            // offset. 
+            offset -= elem.scrollLeft;
+        }
+    }
+    return offset;
+}
+
+// This function is to calculate the top offset of the element within the page,
+// it is generic enough handle nested layers
+function getGrossOffsetTop(elem) {
+    var undefined;
+    var offset = 0;
+    while (elem.offsetParent) {
+        elem = elem.offsetParent;
+        offset += elem.offsetTop;
+        if (elem.tagName == "DIV" && elem.scrollTop != undefined) {
+            // if this is a scrollable div layer, we need to calculate
+            // how much the user has scrolled and subtract it from the
+            // offset. 
+            offset -= elem.scrollTop;
+        }
+    }
+    return offset;
+}
+
+//===============================================================================================
+// Request#125788
+// Using the a div and showing hover at the position that is always slight below the div causes
+// problem when we want to use the hover for images such as bubble chart.  The bubbles appears in
+// one image and thus you only get one div as the hover locator.  But since the position of the
+// hover is always relative to locator, in a bubble chart, the hover location is not correct since
+// we don't really calculate the relative size.
+//
+// This method shows hover based on the mouse position during the hover so the hover will always
+// stay next to the hover.
+// 
+// Ideally, everything should be converted to use this method because using this method, you only
+// need one hover locator per page and we can clean up a lot of code. But since this is a big
+// impact, I filed an architecture enhancement (Request#129299) instead.
+//
+// I wanted to name this showHoverText as well but browsers don't like it because there is another
+// method with this name already.
+//===============================================================================================
+function showHover(hoverText, locator, e) {
+    var tip = document.getElementById(tooltipLayer);
+    // an optional element that needs to be hidden when the tooltip is visible
+    var locatorFoe = locator + 'HIDE';
+    var locator = document.getElementById(locator);
+    if (tip && (!tip.currentTooltipHoverText || hoverText != tip.currentTooltipHoverText)) {
+        var tooltipHtml;
+        tooltipHtml =  '<table cellpadding="0" cellspacing="0" class="tipTable">';
+        tooltipHtml += '<tr><td class="tooltip" align="left" valign="center"><div>';
+        tooltipHtml +=   hoverText;
+        tooltipHtml += '</div></td></tr></table>';
+
+        tip.innerHTML = tooltipHtml;
+        tip.currentTooltipHoverText = hoverText;
+    }
+    
+    // always show tip 5px to the right and bottom of the moust pointer if possible
+    var xOffset = 5;
+    var yOffset = 5;
+
+	if (HM_IE) {
+		// IE event location is relative
+		
+		if ((e.clientX + xOffset + tip.clientWidth) > document.body.clientWidth) {
+			xOffset = document.body.clientWidth - tip.clientWidth - e.clientX;
+		}
+		
+		if ((e.clientY + yOffset + tip.clientHeight) > document.body.clientHeight) {
+			yOffset = 0 - yOffset - tip.clientHeight;
+		}
+
+        tip.style.posLeft =  e.clientX + xOffset + document.body.scrollLeft;
+        tip.style.posTop = e.clientY + yOffset + document.body.scrollTop;
+	} else {
+		// Netscape event location is absolute
+		
+		// Netscape does not support clientWidth or clientHeight so we cannot really get the size
+		// of the hover.  offsetWidth and offsetHeight are the closest attributes that may help us
+		// guess how big the hover is, but it is not always exact.
+		if ((e.pageX + xOffset + tip.offsetWidth) > (window.innerWidth + window.pageXOffset)) {
+			xOffset = window.innerWidth + window.pageXOffset - tip.offsetWidth - e.pageX - 20;
+		}
+		
+		if ((e.pageY + yOffset + tip.offsetHeight) > (window.pageYOffset + window.innerHeight)) {
+			yOffset = 0 - yOffset - tip.offsetHeight;
+		}
+		tip.style.left = e.pageX + xOffset;
+		tip.style.top = e.pageY + yOffset;
+	}
+
+    tip.style.visibility = "visible";
+
+    tip.foe = document.getElementById(locatorFoe);
+    if (tip.foe) {
+      tip.foe.style.visibility = 'hidden';
+    }
+}

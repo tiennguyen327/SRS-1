@@ -219,6 +219,75 @@ namespace SRS.Data.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("SRS.Models.WorkOrder", b =>
+                {
+                    b.Property<int>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("BusinessUnitID")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientProgramID")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientProjectID")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientSAPID")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientStrategicProgramID")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientStrategicProjectID")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientWorkRequestID")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientWorkRequestIDNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClientWorkRequestIDPrefix")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GAMSRNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("GAMSRNumberLink")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MostRecentNote")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RelatedWorkOrderRequests")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequestStatus")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WONumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WOTitle")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Workflow")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ZurichSubProjectCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("WorkOrder");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)

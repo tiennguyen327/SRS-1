@@ -1,0 +1,126 @@
+﻿@page
+@model SRS.Pages.WO.EditModel
+
+@{
+    ViewData["Title"] = "Edit";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<h1>Edit</h1>
+
+<h4>WorkOrder</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="WorkOrder.ID" />
+            <div class="form-group">
+                <label asp-for="WorkOrder.Description" class="control-label"></label>
+                <input asp-for="WorkOrder.Description" class="form-control" />
+                <span asp-validation-for="WorkOrder.Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.MostRecentNote" class="control-label"></label>
+                <input asp-for="WorkOrder.MostRecentNote" class="form-control" />
+                <span asp-validation-for="WorkOrder.MostRecentNote" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.RequestStatus" class="control-label"></label>
+                <input asp-for="WorkOrder.RequestStatus" class="form-control" />
+                <span asp-validation-for="WorkOrder.RequestStatus" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.WONumber" class="control-label"></label>
+                <input asp-for="WorkOrder.WONumber" class="form-control" />
+                <span asp-validation-for="WorkOrder.WONumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.Workflow" class="control-label"></label>
+                <input asp-for="WorkOrder.Workflow" class="form-control" />
+                <span asp-validation-for="WorkOrder.Workflow" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.WOTitle" class="control-label"></label>
+                <input asp-for="WorkOrder.WOTitle" class="form-control" />
+                <span asp-validation-for="WorkOrder.WOTitle" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.ClientWorkRequestIDPrefix" class="control-label"></label>
+                <input asp-for="WorkOrder.ClientWorkRequestIDPrefix" class="form-control" />
+                <span asp-validation-for="WorkOrder.ClientWorkRequestIDPrefix" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.ClientWorkRequestIDNumber" class="control-label"></label>
+                <input asp-for="WorkOrder.ClientWorkRequestIDNumber" class="form-control" />
+                <span asp-validation-for="WorkOrder.ClientWorkRequestIDNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.ZurichSubProjectCode" class="control-label"></label>
+                <input asp-for="WorkOrder.ZurichSubProjectCode" class="form-control" />
+                <span asp-validation-for="WorkOrder.ZurichSubProjectCode" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.BusinessUnitID" class="control-label"></label>
+                <input asp-for="WorkOrder.BusinessUnitID" class="form-control" />
+                <span asp-validation-for="WorkOrder.BusinessUnitID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.ClientWorkRequestID" class="control-label"></label>
+                <input asp-for="WorkOrder.ClientWorkRequestID" class="form-control" />
+                <span asp-validation-for="WorkOrder.ClientWorkRequestID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.RelatedWorkOrderRequests" class="control-label"></label>
+                <input asp-for="WorkOrder.RelatedWorkOrderRequests" class="form-control" />
+                <span asp-validation-for="WorkOrder.RelatedWorkOrderRequests" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.GAMSRNumber" class="control-label"></label>
+                <input asp-for="WorkOrder.GAMSRNumber" class="form-control" />
+                <span asp-validation-for="WorkOrder.GAMSRNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.GAMSRNumberLink" class="control-label"></label>
+                <input asp-for="WorkOrder.GAMSRNumberLink" class="form-control" />
+                <span asp-validation-for="WorkOrder.GAMSRNumberLink" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.ClientSAPID" class="control-label"></label>
+                <input asp-for="WorkOrder.ClientSAPID" class="form-control" />
+                <span asp-validation-for="WorkOrder.ClientSAPID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.ClientStrategicProgramID" class="control-label"></label>
+                <input asp-for="WorkOrder.ClientStrategicProgramID" class="form-control" />
+                <span asp-validation-for="WorkOrder.ClientStrategicProgramID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.ClientProgramID" class="control-label"></label>
+                <input asp-for="WorkOrder.ClientProgramID" class="form-control" />
+                <span asp-validation-for="WorkOrder.ClientProgramID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.ClientProjectID" class="control-label"></label>
+                <input asp-for="WorkOrder.ClientProjectID" class="form-control" />
+                <span asp-validation-for="WorkOrder.ClientProjectID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="WorkOrder.ClientStrategicProjectID" class="control-label"></label>
+                <input asp-for="WorkOrder.ClientStrategicProjectID" class="form-control" />
+                <span asp-validation-for="WorkOrder.ClientStrategicProjectID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-page="./Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

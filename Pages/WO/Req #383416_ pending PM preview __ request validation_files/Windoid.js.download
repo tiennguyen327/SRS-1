@@ -1,0 +1,181 @@
+/******************************************
+ * Windoid manipulation routines
+ ******************************************/
+var COOKIE_PATH    = "/kintana";
+var IS_WINDOID     = "IS_WINDOID";
+var WINDOID_PREFIX = "WINDOID_";
+
+//
+// Open a windoid
+// Use openWindoid(url) if use default size and default properties
+//     openWindoid(url,windoidWidth,windoidHeight) if want different window size and default properties
+//     openWindoid(url,null,null,windoidProperties) if want to specify everything except for name
+//     openWindoid(url,null,null,null,name) if want to specify name but use default properties
+function openWindoid(url, windoidWidth, windoidHeight, windoidProperties, name, encodeParams){
+    if(url!=''){
+        var appendStr = '';
+        if(url.indexOf('?') != -1){ // this assumes that url should not use ? as displayed text
+            appendStr = '&IS_WINDOID=Y';
+        }else{
+            appendStr = '?IS_WINDOID=Y';
+        }
+
+        if (encodeParams) {
+            url = url + encodeURIComponent(appendStr);
+        } else {
+            url = url + appendStr;
+        }
+    }
+    var currentName = WINDOID_PREFIX;
+    if(name != null){
+        currentName = currentName + name;
+    }else{
+        var d = new Date()
+            var suffix = d.getHours() + "_" + d.getMinutes() + "_" + d.getSeconds();
+        var currentName = currentName + "_" + suffix;
+    }
+    var winProperties = (windoidProperties != null) ? windoidProperties :
+        "toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no";
+    if(windoidProperties == null){
+        var winWidth  = (windoidWidth != null)  ? windoidWidth  : 900;
+        var winHeight = (windoidHeight != null) ? windoidHeight : 675;
+        winProperties += ",width=" + winWidth + ", height=" + winHeight;
+    }
+    writeCookie(IS_WINDOID,'Y',COOKIE_PATH,true);
+    window.open(url,
+                currentName,
+                winProperties);
+}
+
+
+
+/**
+ *  Windoid with menu is particularly useful for attachments in windoids this allows a user to save the document.
+ */
+function openWindoidWithMenu(name){
+    openWindoid('',
+                null,
+                null,
+                "toolbar=no,location=no,directories=no,status=yes,menubar=yes,scrollbars=yes,resizable=yes,copyhistory=yes",
+                name);
+}
+//
+// this function is almost the same as openWindoid. The only different is it returns the reference of the windoid
+// to the caller.
+
+function getWindoid(url, windoidWidth, windoidHeight, windoidProperties,name){
+   if(url.indexOf('?') != -1){ // this assumes that url should not use ? as displayed text
+       url = url + '&IS_WINDOID=Y';
+   }else{
+       url = url + '?IS_WINDOID=Y';
+   }
+   var currentName = WINDOID_PREFIX;
+   if(name != null){
+       currentName = currentName + name;
+   }else{
+       var d = new Date()
+       var suffix = d.getHours() + "_" + d.getMinutes() + "_" + d.getSeconds();
+       var currentName = currentName + "_" + suffix;
+   }
+   var winProperties = (windoidProperties != null) ? windoidProperties :
+                       "toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=yes,resizable=yes,copyhistory=yes";
+   if(windoidProperties == null){
+       var winWidth  = (windoidWidth != null)  ? windoidWidth  : 900;
+       var winHeight = (windoidHeight != null) ? windoidHeight : 675;
+  	    winProperties += ",width=" + winWidth + ", height=" + winHeight;
+   }
+   writeCookie(IS_WINDOID,'Y',COOKIE_PATH,true);
+   windoid = window.open(url,currentName,winProperties);
+   return windoid;
+}
+
+//
+//  Close the windoid
+//
+function closeWindoid(){
+   window.close();
+}
+
+// helper function to tell whether the current window is windoid
+function isWindoid(){
+   try{
+      if(parent.name){
+         if(self.name.indexOf(WINDOID_PREFIX) != -1 ||
+	    (parent.name != null && parent.name.indexOf(WINDOID_PREFIX) != -1)){
+	    return true;
+	 }
+      }
+   }catch(e){// main page in frameset
+      if(self.name.indexOf(WINDOID_PREFIX) != -1) {
+          return true;
+      }
+   }
+   if(window.document.getElementById("windoidMainTable") != null)
+   {
+	   return true;
+   }
+   return false;
+}
+
+//
+// Called when window get focus. This is one way to
+// tell the server where the HttpRequest comes from.
+//
+// This may not be called immediately if the Windoid
+// calls the parent window to submit form before it
+// is closed. A workaround is to use timeout to delay
+// the form to be submitted. (Request#143021)
+function onFocusHandler(){
+    if(isWindoid()){
+    	writeCookie(IS_WINDOID,'Y',COOKIE_PATH,true);
+    }else{
+    	writeCookie(IS_WINDOID,'N',COOKIE_PATH,true);
+    }
+}
+
+// Generate hidden field for windoid before submitting a form
+function checkForWindoid(form){
+    var input = document.createElement('INPUT');
+    input.type='hidden'
+    input.name='IS_WINDOID'
+    if(isWindoid()){
+        input.value='Y';
+        writeCookie(IS_WINDOID,'Y',COOKIE_PATH,true);
+    }else{
+        input.value='N';
+        writeCookie(IS_WINDOID,'N',COOKIE_PATH,true);
+    }
+    form.appendChild(input);
+}
+
+//
+// Used by Quality Center portlets for drilldown into Quality Center.
+// Opens a new window pointed at Quality Center. Supplied by Quality Center team.
+// Not really related to windoid, but close enough to be included here rather than in its own file.
+//
+function Open_TD(TD_Server, Domain_And_Project, UserName, Module_ID)
+{
+	var tmp_str = Domain_And_Project.split('#@#')[0];
+	if (tmp_str.length=0) 
+	{
+		alert("Unable to open TestDirector.\n The link does not contain the domain name and the project name.");
+	}
+	else
+	{
+		tmp_str = tmp_str.substring(tmp_str.indexOf(".")+1, tmp_str.length);
+		tmp_str = tmp_str.substring(tmp_str.indexOf(".")+1, tmp_str.length);
+		tmp_str = tmp_str.substring(tmp_str.indexOf(".")+1, tmp_str.length);
+		Domain_Name = tmp_str.substring(0, tmp_str.indexOf("::"));
+		Project_Name = tmp_str.substring(tmp_str.indexOf("::")+2, tmp_str.length);
+
+
+		TD_URL = "testdirector:" + TD_Server;
+		TD_URL = TD_URL + "," + Domain_Name;
+		TD_URL = TD_URL + "," + Project_Name;
+		TD_URL = TD_URL + "," + UserName;
+		TD_URL = TD_URL + ";" + Module_ID;
+		
+		location.href = TD_URL;
+	}
+}
+

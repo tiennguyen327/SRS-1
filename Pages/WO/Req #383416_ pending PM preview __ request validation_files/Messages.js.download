@@ -1,0 +1,174 @@
+var errorOpeningURL = "The URL \"{0}\" could not be opened.\nThis is most likely because of security restrictions\n\n\nOriginal error name: {1}\ndescription: {2}\nmessage: {3}";
+var reqMessage = "You must provide a value for the field \"{0}\" to complete the validation.";
+var invalidMessage = "An invalid value has been entered for: {0} \nPlease click on the autocomplete icon to validate the field.";
+var incompleteDateMessage = "You need to either empty or complete entire date in: {0}";
+var numericInvalidCharsMessage = "Please enter a valid number for: {0}";
+var dayMessage = "Selected day does not exist in selected month for: {0}";
+var yearTooShortMessage = "Year does not have four digits for: {0}";
+var yearInvalidCharsMessage = "Year should only have numeric characters for: {0}";
+var hourInvalidCharsMessage = "Hour should only have numeric characters for: {0}";
+var minInvalidCharsMessage = "Minute should only have numeric characters for: {0}";
+var secInvalidCharsMessage = "Second should only have numeric characters for: {0}"
+var hourInvalidMessage = "Invalid hour selected for: {0}";
+var minInvalidMessage = "Invalid minute selected for: {0}";
+var secInvalidMessage = "Invalid second selected for: {0}";
+var incompleteTimeMessage = "You need to either empty or complete entire time: {0}";
+var missingReqIDMess = "Cannot access this page without an request ID number.";
+var missingReqTypeMess = "Cannot access this page without an request type.";
+var missingReqTypeIDMess = "Cannot access this page without an request type ID.";
+var missingReqDescripMess = "Cannot access this page without an request Description.";
+var missingTempName = "Cannot access this page without a template file name.";
+var trimMsg = "You have exceeded the maximum length of this field and your text will be truncated. Field Name: {0}";
+var missingFileNameMess = "Invalid FileName. Please Contact your System Administrator.";
+var loadingMessage = "Loading...";
+var noDecimalNumberMessage = "Please enter only integer values for \"{0}\".";
+var decimalDigitsExceededMessage = "The field \"{0}\" should not have more than {1} decimal place[s].";
+var formatCharsInterchanged = "DigitGroup Separator must not be placed after the decimal separator in a number in {0}";
+var unrecognizedChar = "The input for the numeric field {0} contains one or more non-numeric characters, decimal separators or digit group separators.";
+var containsGroupSeparator = "The field \"{0}\" should contain only numeric characters or decimal separator.";
+var belowMinimum = "The value should not be less than {0} in {1}";
+var aboveMaximum = "The value should not be greater than {0} in {1}";
+var confirmCancelMsg = "Are you sure you want to cancel this request?";
+var confirmReopenMsg = "Are you sure you want to reopen this request?";
+var confirmOverrideMsg = "This entity is currently blocked by other reference(s). \nDo you want to override the status and continue?";
+var defaultsNotSupported = "Defaulting logic is not supported for this form.";
+var belowMinPhoneLength = "The telephone field \"{0}\" should not have less than {1} digit[s].";
+var aboveMaxPhoneLength = "The telephone field \"{0}\" should not have more than {1} digit[s].";
+var invalidPhoneCharacters = "There's 1 or more invalid characters(only digits are allowed) in your phone field: {0} \nThe invalid characters are: {1} \nClick Ok to remove the invalid characters or Cancel to try again.";
+var invalidCustomDMValue = "The input for the field: {0} doesn't match the given format. \n\tFormat is {1}\tInput is {2}\nExamples: \n\tIf the Format is DDD\\-DD\\-DDDD then the input should be 555-55-5555 or\n\tIf the Format is AA\\-DDD then the input should be BC-349.\nLegend of the Format:\n\tL - Literals A-Z and a-z\n\tD - Digits 0-9\n\tA - Any Character\n\t\\ - backslash means succeeding character is a delimiter";
+var missingURLMessage = "The URL field cannot be empty when the Description field is set. \nYou need to either enter the URL or empty the Description field.";
+var invalidLinkMessage = "The URL entered is not an absolute URL and may not be displayed as a Link in portlets. \nClick Ok to continue or Cancel to enter an absolute URL. \n(e.g. http://my.co/myportal/mywebap/myfolder/mypage.html)"
+// messages for passwords
+var newMismatchMess = "The two passwords you have typed do not match exactly. Please try again.";
+var missingPassword = "You must fill in the {0} password field to complete your change password action.";
+var samePassMess = "New password is identical to Old password. ";
+var missingConfirmPassword = "You must confirm your new password to complete your change password action.";
+var numericNonZeroMessage = "Please enter a non-zero positive number for: ";
+//Messages for the Date Field
+var invalidDate = "The date entered in {0} is invalid. Sample valid date entries are {1}";
+var invalidTime = "The time entered in {0} is invalid. Sample valid time entries are {1}";
+var invalidDateTime = "The date and time entered in {0} is invalid. Sample valid date entries are {1}. \nSample time entries are {2}";
+var invalidDateOrTime = "The date or time or date and time entered in {0} is invalid. Sample valid date entries are {1}\nSample time entries are {2}";
+var invalidDateValue = "The date-field entry for '{0}' has an invalid date.";
+var missingErrorOnDateError = "Input in {0} is invalid, but problem could not be identified.  Please contact Kintana Support with this error message.";
+//Messages for the WF Step Authentication
+var blankUserName = "Please enter your Username";
+var blankLogonId  = "Please enter your Logon Id";
+var blankPassword = "Please enter your Password";
+// Messages for the popup calendar
+var datePopupPrevYear = "Previous year (hold for menu)";
+var datePopupPrevMonth = "Previous month (hold for menu)";
+var datePopupGoToday = "Go to Today";
+var datePopupNextMonth = "Next month (hold for menu)";
+var datePopupNextYear = "Next year (hold for menu)";
+var datePopupSelectDate = "Select date";
+var datePopupToday = "Today";
+var datePopupClose = "Close";
+var datePopupCancel = "Cancel";
+var datePopupDone = "Done";
+var datePopupTime = "Time";
+var datePopupInvalidTime = "The time entered is invalid. Sample valid time entries are hh:MM:SS PM PST\nHH:MM:SS PST\nhh:MM:SS PM\nHH:MM:SS\nhh:MM PM PST\nHH:MM PST\nhh:MM PM\nHH:MM\nHH";
+var dayArray = new Array ("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday");
+var monthArray = new Array ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December");
+// Messages for WF transitions
+var invalidDropDownVal = "Could not set field '{0}' to value '{1}' in Rule {2} - '{3}'.";
+var chooseTransition = "Please choose a transition";
+var needAtLeastOne = "You need to select at least one '{0}'";
+var needSelectStep = "Please select an action and one or more lines that are eligible for the selected action.";
+var needSelectLine = "You need to select at least one line";
+var needSelectOutcome = "You need to select an outcome";
+var blankNewPassword = "You must enter the password twice for verification purposes. Please try again.";
+var changedWFError = "Rules are not allowed to auto-populate the\nWorkflow field during a workflow event.\n\nContact your Kintana Administrator\nfor assistance.\n\nDetail Information:\nRequest Type: {0}\nRule No: {1}\nRule Name: {2}";
+// Messages for the ReferencesPanel
+var addedReferenceMessage = "Adding {0} {1} ({2})";
+var addedReferenceNoRelNameMessage = "Adding {0} {1}";
+var confirmReferenceDelete = "Are you sure you want to save all pending changes and delete this reference?";
+var noneSelected = "You may not have entered a value.";
+var passwordRequired = "Please enter the password for the user.\nThe password field cannot be empty.";
+var portletInfoNotAvailable = "This portlet's definition has been altered by the Administrator since you arrived at this page.\n In order to add it, please click on the Done button to save your current changes and revisit this page.";
+// PMO Messages
+var deleteProjectConfirm = "Are you sure you want to save all pending changes and remove this Project?";
+var deleteBusinessObjConfirm = "Are you sure you want to save all pending changes and remove this Business Objective?";
+var confirmBusObjDelete = "Are you sure you want to delete Business Objective {0}?"
+
+//--<Demand Management Messages>---------------------------------------------------------------
+var newFieldNameIsNull = "The new field cannot be null.";
+var secondDemandFieldAddedBeforeSave = "Request Types have been added to this Demand Set and only one Demand Field can be added before the Demand Set is saved.  Please save this Demand Set and then try adding the new Demand Field."
+var searchValidationIsNull = "The Search Validation for the new field cannot be null."
+var demandFieldNameInUse   = "The field name {0} already exists in this Demand Set.  Please make sure all the field names are unique."
+var confirmRemoveField     = "This Demand Set will be saved to the database when a field is removed.  Are you sure you want to remove this field?";
+var confirmDemandSetDelete = "This Demand Set and its data in the Data Warehouse will be deleted from the database.  Are you sure you want to delete this Demand Set?";
+var requestTypeIsNull = "Request Type cannot be null.  Please select a value for the request type.";
+var requestTypeAlreadyAdded = "{0} request type has been already added and cannot be added again."
+var noRequestTypeSelected = "No Request Type is selected or there are no Request Types for this demand set."
+var requestTypeFieldIsNullForDemandField =  "{0}-Request Type Field cannot be null or blank"
+var cannotAddReqType = "Cannot add a new request type when the request type fields are null or blank."
+var requestTypeFieldNotSpecifiedForDemandField = "Request Type Field is not specified for a Demand Field."
+var demandSetSaveAlert = "Saving a demand set is a very complex operation and can take up to 3 minutes to complete.  Please wait to be redirected to the Administer Demand Sets page and please do not re-click the done button."
+var missingRequestType = "Please provide a Request Type for this Demand Set."
+var REOPEN_REQ_BUTTON = "Reopen Request";
+var CANCEL_REQ_BUTTON = "Cancel Request";
+//=============================================================================================
+//Table Component
+var closingParentRequestWarningMessage = "Warning: Please do not close or browse away from the parent Request. Otherwise you will get javascript errors.";
+var tableCompLoadThresholdMessage = "This table has more than 1000 entries, please be aware that this will take some time to load.";
+var internalErrorUndefElement = "Internal Error: There is an undefined element in the this.entries list at location:";
+var cancelChangesMesage = "You have made changes to the table.\nAre you sure you want to cancel?";
+var oldDataStaleMessage = "The request you are viewing has been updated by another user.\nDo you want to continue viewing your existing data?";
+var staleRequestMessage = "The request you are viewing has been updated by another user.\nYou can not edit the table entries unless you reload your request.\nContinue viewing?";
+var deleteConfirm = "Are you sure you want to delete all selected Entries?";
+var COL_DEFINITION_CHANGE_MESSAGE = "The \"{0}\" Table's column definition have changed, please save your Request before you continue editing your Table. If you don't save, it is possible that you may experience data corruption.";
+var INVALID_NUM = "Error: Non-numeric value present in column";
+
+var NO_ENTRIES = "No Entries";
+var NO_ENTRIES_WITH_PARENS = "(No Entries)";
+var ENTRIES_TXT = "Entries";
+var ENTRY_TXT = "Entry";
+var SEQ = "Seq";
+var TOTAL = "Total";
+var gotoUrl = "Open URL";
+
+//=============================================================================================
+// Resource Managment
+var selectLinesBeforeEdit = "You have not selected any lines to Edit... \nPlease click on the checkboxes next to the lines that you want to edit in order to select them.";
+var STAFFING_PROFILE_ENTITY_NAME = "Staffing Profile"
+var NO_STAFFING_PROFILE = "(No Staffing Profile)"
+var RESOURCE_POOL_ENTITY_NAME = "Resource Pool"
+var NO_RESOURCE_POOL = "(No Resource Pool)"
+var selectSynchBudgetName = "Please specify synchronized Budget name"
+var missingBudgetInfo = "The Staffing Profle could not be synched with the Budget because one more Staffing Profile lines are missing expense type or labor category information.\nBudget Synch has been disabled. Please verify data and try again.";
+
+//=============================================================================================
+// Budget
+var BUDGET_ENTITY_NAME = "Budget";
+var NO_BUDGET = "(No Budget)";
+
+// Financial Benefit
+var FINANCIAL_BENEFIT_ENTITY_NAME = "Financial Benefit";
+var NO_FINANCIAL_BENEFIT = "(No Financial Benefit)";
+
+// showAll and hideAll image
+var showAllImg = new Image();
+    showAllImg.src = '/itg/web/knta/global/images/en/SecShowAllSections.gif';
+var showAllOffImg = new Image();
+    showAllOffImg.src = '/itg/web/knta/global/images/en/SecShowAllSections_off.gif';
+var hideAllImg = new Image();
+    hideAllImg.src = '/itg/web/knta/global/images/en/SecHideAllSections.gif';
+var hideAllOffImg = new Image();
+    hideAllOffImg.src = '/itg/web/knta/global/images/en/SecHideAllSections_off.gif';
+var expandAllImg = new Image();
+    expandAllImg.src = '/itg/web/knta/global/images/en/FunExpandAll.gif';
+var expandAllOffImg = new Image();
+    expandAllOffImg.src = '/itg/web/knta/global/images/en/FunExpandAll_off.gif';
+var collapseAllImg = new Image();
+    collapseAllImg.src = '/itg/web/knta/global/images/en/FunCollapseAll.gif';
+var collapseAllOffImg = new Image();
+    collapseAllOffImg.src = '/itg/web/knta/global/images/en/FunCollapseAll_off.gif';
+
+//=============================================================================================
+// Message for scoring key -- this must match the resource bundle in KPFX_Resources
+var DEFINE_CRITERION_MESG = 'Please <a href="javascript:editCriterion(\'{0}\');">define</a> domain, weight, and selections for this criterion.';
+var NO_CRITERIA_MESG = 'There is currently no criteria in this domain.';
+
+// Document Search
+var DOCUMENT_RELEVANCE_OPTION = "Document Relevance";

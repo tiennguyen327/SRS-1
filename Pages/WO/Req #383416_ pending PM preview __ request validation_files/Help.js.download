@@ -1,0 +1,33 @@
+
+/**
+* This function opens a windoid that displays the help contents for the
+* selected portlet.
+**/
+function gotoPortletHelp(helpURL) {
+  var w = getWindoid(helpURL, null, null, null, "PortletHelp");
+  w.focus();
+}
+
+/**
+* This function opens a windoid that displays the help contents for the
+* DynamicPanel
+**/
+function gotoDynamicPanelHelp(helpURL) {
+  // Changing the default windoid properties to not show the scrollbar for Request Help.
+  // need to specify the window height below. This is related to the height of the table in the RequestTypeHelp.jsp
+  // that height has to be just enough to fir in this window. Otherwise the top contents get chopped off.
+  var winProp = "toolbar=no,location=no,directories=no,status=yes,menubar=no,scrollbars=no,resizable=yes,copyhistory=yes,width=900,height=785";
+  var w = getWindoid(helpURL, null, null, winProp, "DynamicPanelHelp");
+  w.focus();
+}
+
+
+
+/**
+* This method opens a windoid with the Kintana online help.
+**/
+function gotoKintanaHelp(helpPage) {
+  var w = getWindoid(helpPage, null, null, null, "KintanaHelp");
+  w.focus();
+}
+
